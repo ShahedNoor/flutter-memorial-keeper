@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1081913766740",
+    "project_id": "memorial-keeper",
+    "storage_bucket": "memorial-keeper.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1081913766740:android:7f69133d672d84f9dfcec1",
+        "android_client_info": {
+          "package_name": "com.shahednoor.memorialkeeper"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCGNHjNfN0yKhXK4lLr_7iJlAFULTL6QCM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
