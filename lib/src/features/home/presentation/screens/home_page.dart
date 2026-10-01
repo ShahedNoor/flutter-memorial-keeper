@@ -1,7 +1,7 @@
 import 'package:memorial_keeper/src/imports/core_imports.dart';
 import 'package:memorial_keeper/src/imports/packages_imports.dart';
 
-import '../models/sample_memorial.dart';
+import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
 import '../widgets/widgets.dart';
 
 /// Clean, modular Home Page orchestrating header, dua banner, stats, filters, and memorial records.
@@ -17,8 +17,6 @@ class _HomePageState extends State<HomePage> {
   String _searchQuery = '';
   bool _isSearchActive = false;
   final TextEditingController _searchController = TextEditingController();
-
-  final List<SampleMemorial> _memorials = SampleMemorial.defaultList;
 
   @override
   void dispose() {
@@ -42,13 +40,18 @@ class _HomePageState extends State<HomePage> {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    final filteredMemorials = _memorials.where((m) {
+    final memorialState = context.watch<MemorialBloc>().state;
+    final allMemorials = memorialState.memorials;
+
+    final filteredMemorials = allMemorials.where((m) {
       final matchesCategory =
           _selectedCategory == 'all' || m.category == _selectedCategory;
-      final matchesSearch = _searchQuery.isEmpty ||
-          m.fullName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          m.relationship.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          m.restingPlace.toLowerCase().contains(_searchQuery.toLowerCase());
+      final query = _searchQuery.trim().toLowerCase();
+      final matchesSearch = query.isEmpty ||
+          m.fullName.toLowerCase().contains(query) ||
+          (m.arabicName?.toLowerCase().contains(query) ?? false) ||
+          m.displayRelationship.toLowerCase().contains(query) ||
+          m.restingPlaceDisplay.toLowerCase().contains(query);
       return matchesCategory && matchesSearch;
     }).toList();
 
@@ -71,34 +74,69 @@ class _HomePageState extends State<HomePage> {
                   controller: _searchController,
                   autofocus: true,
                   onChanged: (val) => setState(() => _searchQuery = val),
+                  style: tt.bodyMedium?.copyWith(
+                    color: cs.onSurface,
+                  ),
                   decoration: InputDecoration(
                     hintText: 'Search by name, relationship, or cemetery...',
-                    prefixIcon: AppIcon(
-                      icon: HugeIcons.strokeRoundedSearch01,
-                      size: 18.sp,
-                      color: cs.primary,
+                    hintStyle: tt.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                    ),
+                    isDense: true,
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 16.w,
+                      vertical: 12.h,
+                    ),
+                    prefixIcon: Padding(
+                      padding: EdgeInsets.only(left: 14.w, right: 10.w),
+                      child: AppIcon(
+                        icon: HugeIcons.strokeRoundedSearch01,
+                        size: 20.sp,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                    prefixIconConstraints: BoxConstraints(
+                      minWidth: 44.w,
+                      minHeight: 44.h,
                     ),
                     suffixIcon: _searchQuery.isNotEmpty
                         ? IconButton(
                             icon: AppIcon(
                               icon: HugeIcons.strokeRoundedCancel01,
-                              size: 16.sp,
+                              size: 18.sp,
+                              color: cs.onSurfaceVariant,
                             ),
+                            splashRadius: 18.r,
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _searchQuery = '');
                             },
                           )
                         : null,
+                    suffixIconConstraints: BoxConstraints(
+                      minWidth: 44.w,
+                      minHeight: 44.h,
+                    ),
                     filled: true,
                     fillColor: cs.surfaceContainerLow,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(color: cs.outlineVariant),
+                      borderSide: BorderSide(
+                        color: cs.outlineVariant.withValues(alpha: 0.6),
+                      ),
                     ),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(16.r),
-                      borderSide: BorderSide(color: cs.outlineVariant),
+                      borderSide: BorderSide(
+                        color: cs.outlineVariant.withValues(alpha: 0.6),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16.r),
+                      borderSide: BorderSide(
+                        color: cs.primary,
+                        width: 1.5,
+                      ),
                     ),
                   ),
                 ),
@@ -110,24 +148,82 @@ class _HomePageState extends State<HomePage> {
             padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // Daily Dua Banner with live counter
-                const DuaHeroCard(),
-                SizedBox(height: 16.h),
+                if (!_isSearchActive) ...[
+                  // Daily Dua Banner with live counter
+                  const DuaHeroCard(),
+                  SizedBox(height: 16.h),
 
-                // Offline Protection Status & Stats Overview
-                SyncAndStatsCard(
-                  memorialCount: _memorials.length,
-                  placesCount: 3,
-                  generationsCount: 3,
-                ),
-                SizedBox(height: 20.h),
+                  // Dynamically compute real stats from all recorded memorials
+                  Builder(
+                    builder: (context) {
+                      // 1. Unique Resting Places count
+                      final uniquePlaces = <String>{};
+                      for (final m in allMemorials) {
+                        final name = m.cemeteryName?.trim();
+                        final area = m.cemeteryArea?.trim();
+                        if (name != null && name.isNotEmpty) {
+                          uniquePlaces.add(name.toLowerCase());
+                        } else if (area != null && area.isNotEmpty) {
+                          uniquePlaces.add(area.toLowerCase());
+                        }
+                      }
+
+                      // 2. Family Generations count (based on genealogical tiers)
+                      final generationTiers = <int>{};
+                      for (final m in allMemorials) {
+                        final rel = m.relationship.toLowerCase();
+                        if (rel.contains('great_grand') ||
+                            rel.contains('great-grand')) {
+                          generationTiers.add(3); // Great-grandparents
+                        } else if (rel.contains('grand')) {
+                          generationTiers.add(2); // Grandparents tier
+                        } else if (rel == 'father' ||
+                            rel == 'mother' ||
+                            rel == 'uncle' ||
+                            rel == 'aunt') {
+                          generationTiers.add(1); // Parents & aunts/uncles tier
+                        } else if (rel == 'son' ||
+                            rel == 'daughter' ||
+                            rel == 'nephew' ||
+                            rel == 'niece') {
+                          generationTiers.add(-1); // Children tier
+                        } else if (rel.contains('grandson') ||
+                            rel.contains('granddaughter') ||
+                            rel.contains('grandchild')) {
+                          generationTiers.add(-2); // Grandchildren tier
+                        } else {
+                          // Self, spouse, brother, sister, friends, colleagues tier
+                          generationTiers.add(0);
+                        }
+                      }
+
+                      return SyncAndStatsCard(
+                        memorialCount: allMemorials.length,
+                        placesCount: uniquePlaces.length,
+                        generationsCount: generationTiers.length,
+                        onTapMemorials: () {
+                          MemorialsPeekSheet.show(context, allMemorials);
+                        },
+                        onTapPlaces: () {
+                          RestingPlacesPeekSheet.show(context, allMemorials);
+                        },
+                        onTapGenerations: () {
+                          GenerationsPeekSheet.show(context, allMemorials);
+                        },
+                      );
+                    },
+                  ),
+                  SizedBox(height: 20.h),
+                ],
 
                 // Section Title with Badge
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Family Departed Records',
+                      _isSearchActive
+                          ? 'Search Results'
+                          : 'Family Departed Records',
                       style: tt.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: cs.onSurface,
@@ -141,7 +237,9 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: Text(
-                        '${filteredMemorials.length} Recorded',
+                        _isSearchActive
+                            ? '${filteredMemorials.length} Found'
+                            : '${filteredMemorials.length} Recorded',
                         style: tt.labelSmall?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w700,
@@ -162,17 +260,23 @@ class _HomePageState extends State<HomePage> {
                 SizedBox(height: 16.h),
 
                 // Memorial List / Empty State
-                if (filteredMemorials.isEmpty)
-                  const HomeEmptyState()
-                else
+                if (filteredMemorials.isEmpty) ...[
+                  if (_isSearchActive)
+                    HomeEmptyState(
+                      message: _searchQuery.isNotEmpty
+                          ? 'No records matching "$_searchQuery"'
+                          : 'No records found',
+                      subtitle:
+                          'Try searching with another name, relationship, or cemetery.',
+                    )
+                  else
+                    const HomeEmptyState(),
+                ] else
                   ...filteredMemorials.map(
                     (memorial) => MemorialCard(
                       memorial: memorial,
                       onTap: () {
-                        showGlobalToast(
-                          message: 'Opening ${memorial.fullName} profile...',
-                          status: 'info',
-                        );
+                        context.push(AppRoutes.addMemorial, extra: memorial);
                       },
                     ),
                   ),
@@ -184,6 +288,7 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'home_add_memorial_fab',
         backgroundColor: cs.primary,
         foregroundColor: Colors.white,
         elevation: 3,
@@ -191,10 +296,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: BorderRadius.circular(16.r),
         ),
         onPressed: () {
-          showGlobalToast(
-            message: 'Create Memorial feature opening...',
-            status: 'info',
-          );
+          context.push(AppRoutes.addMemorial);
         },
         icon: AppIcon(
           icon: HugeIcons.strokeRoundedAdd01,

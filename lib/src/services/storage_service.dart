@@ -6,7 +6,7 @@ class StorageService {
   StorageService._();
   static final StorageService instance = StorageService._();
 
-  late final SharedPreferences _prefs;
+  SharedPreferences? _prefs;
 
   /// Initialize SharedPreferences instance.
   FutureEither<void> init() async {
@@ -19,11 +19,18 @@ class StorageService {
     );
   }
 
+  Future<SharedPreferences> _getPrefs() async {
+    return _prefs ??= await SharedPreferences.getInstance();
+  }
+
   // --- SETTERS ---
 
   FutureEither<bool> setString(String key, String value) async {
     return runTask(
-      () => _prefs.setString(key, value),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.setString(key, value);
+      },
       operation: 'sharedPreferences.setString',
       category: LogCategory.database,
       context: {'key': key},
@@ -32,7 +39,10 @@ class StorageService {
 
   FutureEither<bool> setBool(String key, bool value) async {
     return runTask(
-      () => _prefs.setBool(key, value),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.setBool(key, value);
+      },
       operation: 'sharedPreferences.setBool',
       category: LogCategory.database,
       context: {'key': key},
@@ -41,7 +51,10 @@ class StorageService {
 
   FutureEither<bool> setInt(String key, int value) async {
     return runTask(
-      () => _prefs.setInt(key, value),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.setInt(key, value);
+      },
       operation: 'sharedPreferences.setInt',
       category: LogCategory.database,
       context: {'key': key},
@@ -50,7 +63,10 @@ class StorageService {
 
   FutureEither<bool> setDouble(String key, double value) async {
     return runTask(
-      () => _prefs.setDouble(key, value),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.setDouble(key, value);
+      },
       operation: 'sharedPreferences.setDouble',
       category: LogCategory.database,
       context: {'key': key},
@@ -59,7 +75,10 @@ class StorageService {
 
   FutureEither<bool> setStringList(String key, List<String> value) async {
     return runTask(
-      () => _prefs.setStringList(key, value),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.setStringList(key, value);
+      },
       operation: 'sharedPreferences.setStringList',
       category: LogCategory.database,
       context: {'key': key},
@@ -69,34 +88,37 @@ class StorageService {
   // --- GETTERS ---
 
   String? getString(String key) {
-    return _prefs.getString(key);
+    return _prefs?.getString(key);
   }
 
   bool? getBool(String key) {
-    return _prefs.getBool(key);
+    return _prefs?.getBool(key);
   }
 
   int? getInt(String key) {
-    return _prefs.getInt(key);
+    return _prefs?.getInt(key);
   }
 
   double? getDouble(String key) {
-    return _prefs.getDouble(key);
+    return _prefs?.getDouble(key);
   }
 
   List<String>? getStringList(String key) {
-    return _prefs.getStringList(key);
+    return _prefs?.getStringList(key);
   }
 
   // --- COMMON ---
 
   bool containsKey(String key) {
-    return _prefs.containsKey(key);
+    return _prefs?.containsKey(key) ?? false;
   }
 
   FutureEither<bool> remove(String key) async {
     return runTask(
-      () => _prefs.remove(key),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.remove(key);
+      },
       operation: 'sharedPreferences.remove',
       category: LogCategory.database,
       context: {'key': key},
@@ -105,7 +127,10 @@ class StorageService {
 
   FutureEither<bool> clear() async {
     return runTask(
-      () => _prefs.clear(),
+      () async {
+        final prefs = await _getPrefs();
+        return prefs.clear();
+      },
       operation: 'sharedPreferences.clear',
       category: LogCategory.database,
     );

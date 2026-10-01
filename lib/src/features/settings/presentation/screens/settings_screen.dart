@@ -179,22 +179,25 @@ class SettingsScreen extends StatelessWidget {
     required TextTheme tt,
     required VoidCallback onTap,
   }) {
-    return Container(
-      margin: EdgeInsets.only(bottom: 8.h),
-      decoration: BoxDecoration(
+    return Padding(
+      padding: EdgeInsets.only(bottom: 8.h),
+      child: Material(
         color: cs.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(14.r),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: AppIcon(icon: icon, color: cs.primary, size: 20.sp),
-        title: Text(title, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
-        subtitle: Text(subtitle, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
-        trailing: AppIcon(
-          icon: HugeIcons.strokeRoundedArrowRight01,
-          size: 16.sp,
-          color: cs.onSurfaceVariant,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.r),
+          side: BorderSide(color: cs.outlineVariant),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          onTap: onTap,
+          leading: AppIcon(icon: icon, color: cs.primary, size: 20.sp),
+          title: Text(title, style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+          subtitle: Text(subtitle, style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
+          trailing: AppIcon(
+            icon: HugeIcons.strokeRoundedArrowRight01,
+            size: 16.sp,
+            color: cs.onSurfaceVariant,
+          ),
         ),
       ),
     );

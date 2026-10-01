@@ -1,9 +1,9 @@
 import 'package:memorial_keeper/src/imports/core_imports.dart';
 import 'package:memorial_keeper/src/imports/packages_imports.dart';
-
-import '../../../home/presentation/models/sample_memorial.dart';
-import '../../../home/presentation/widgets/home_empty_state.dart';
-import '../../../home/presentation/widgets/memorial_card.dart';
+import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorial_keeper/src/features/home/presentation/widgets/home_empty_state.dart';
+import 'package:memorial_keeper/src/features/home/presentation/widgets/memorial_card.dart';
 
 /// Comprehensive Memorial Directory with dedicated Family and Others tabs.
 class MemorialDirectoryScreen extends StatefulWidget {
@@ -20,83 +20,6 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
   String _searchQuery = '';
   final TextEditingController _searchController = TextEditingController();
 
-  // Master sample data
-  final List<SampleMemorial> _familyList = const [
-    SampleMemorial(
-      id: '1',
-      fullName: 'Haji Abdul Gafur',
-      relationship: 'Paternal Grandfather (দাদা)',
-      category: 'grandparents',
-      birthYear: '1935',
-      passingYear: '2016',
-      age: 81,
-      restingPlace: 'Azimpur Graveyard, Plot 14, Dhaka',
-    ),
-    SampleMemorial(
-      id: '2',
-      fullName: 'Begum Rokeya Khatun',
-      relationship: 'Paternal Grandmother (দাদী)',
-      category: 'grandparents',
-      birthYear: '1942',
-      passingYear: '2020',
-      age: 78,
-      restingPlace: 'Azimpur Graveyard, Plot 15, Dhaka',
-    ),
-    SampleMemorial(
-      id: '3',
-      fullName: 'Muhammad Shamsul Huda',
-      relationship: 'Father (বাবা)',
-      category: 'parents',
-      birthYear: '1961',
-      passingYear: '2023',
-      age: 62,
-      restingPlace: 'Banani Cemetery, Section B, Dhaka',
-    ),
-    SampleMemorial(
-      id: '4',
-      fullName: 'Nurul Islam Chowdhury',
-      relationship: 'Maternal Uncle (মামা)',
-      category: 'relatives',
-      birthYear: '1955',
-      passingYear: '2019',
-      age: 64,
-      restingPlace: 'Garibullah Shah Mazar Cemetery, Chittagong',
-    ),
-  ];
-
-  final List<SampleMemorial> _othersList = const [
-    SampleMemorial(
-      id: '5',
-      fullName: 'Prof. Dr. Jamaluddin Ahmed',
-      relationship: 'Beloved University Mentor (শিক্ষক)',
-      category: 'teachers',
-      birthYear: '1948',
-      passingYear: '2022',
-      age: 74,
-      restingPlace: 'Mirpur Martyred Intellectuals Graveyard, Dhaka',
-    ),
-    SampleMemorial(
-      id: '6',
-      fullName: 'Shafiqur Rahman',
-      relationship: 'Childhood Best Friend (বন্ধু)',
-      category: 'friends',
-      birthYear: '1970',
-      passingYear: '2021',
-      age: 51,
-      restingPlace: 'Rayer Bazar Graveyard, Dhaka',
-    ),
-    SampleMemorial(
-      id: '7',
-      fullName: 'Maulana Abdul Hai',
-      relationship: 'Neighborhood Mosque Imam (ইমাম সাহেব)',
-      category: 'elders',
-      birthYear: '1938',
-      passingYear: '2018',
-      age: 80,
-      restingPlace: 'Uttara Sector 4 Cemetery, Dhaka',
-    ),
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -110,13 +33,14 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
     super.dispose();
   }
 
-  List<SampleMemorial> _filterList(List<SampleMemorial> list) {
+  List<Memorial> _filterList(List<Memorial> list) {
     if (_searchQuery.trim().isEmpty) return list;
     final query = _searchQuery.toLowerCase();
     return list.where((m) {
       return m.fullName.toLowerCase().contains(query) ||
-          m.relationship.toLowerCase().contains(query) ||
-          m.restingPlace.toLowerCase().contains(query);
+          (m.arabicName?.toLowerCase().contains(query) ?? false) ||
+          m.displayRelationship.toLowerCase().contains(query) ||
+          m.restingPlaceDisplay.toLowerCase().contains(query);
     }).toList();
   }
 
@@ -126,8 +50,9 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    final filteredFamily = _filterList(_familyList);
-    final filteredOthers = _filterList(_othersList);
+    final memorialState = context.watch<MemorialBloc>().state;
+    final filteredFamily = _filterList(memorialState.familyMemorials);
+    final filteredOthers = _filterList(memorialState.othersMemorials);
 
     return Scaffold(
       backgroundColor: cs.surface,
@@ -155,6 +80,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                 controller: _tabController,
                 indicatorSize: TabBarIndicatorSize.tab,
                 dividerColor: Colors.transparent,
+                labelPadding: EdgeInsets.symmetric(horizontal: 4.w),
                 indicator: BoxDecoration(
                   color: cs.primary,
                   borderRadius: BorderRadius.circular(12.r),
@@ -180,32 +106,46 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         AppIcon(
                           icon: HugeIcons.strokeRoundedUserGroup,
-                          size: 16.sp,
+                          size: 15.sp,
                           color: _tabController.index == 0
                               ? Colors.white
                               : cs.onSurfaceVariant,
                         ),
-                        SizedBox(width: 8.w),
-                        Text('Family (${_familyList.length})'),
+                        SizedBox(width: 6.w),
+                        Flexible(
+                          child: Text(
+                            'Family (${filteredFamily.length})',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   Tab(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
                       children: [
                         AppIcon(
                           icon: HugeIcons.strokeRoundedUser,
-                          size: 16.sp,
+                          size: 15.sp,
                           color: _tabController.index == 1
                               ? Colors.white
                               : cs.onSurfaceVariant,
                         ),
-                        SizedBox(width: 8.w),
-                        Text('Others & Friends (${_othersList.length})'),
+                        SizedBox(width: 6.w),
+                        Flexible(
+                          child: Text(
+                            'Others & Friends (${filteredOthers.length})',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -224,35 +164,69 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
             child: TextField(
               controller: _searchController,
               onChanged: (val) => setState(() => _searchQuery = val),
+              style: tt.bodyMedium?.copyWith(
+                color: cs.onSurface,
+              ),
               decoration: InputDecoration(
                 hintText: 'Search by name, role, or cemetery...',
-                prefixIcon: AppIcon(
-                  icon: HugeIcons.strokeRoundedSearch01,
-                  size: 18.sp,
-                  color: cs.primary,
+                hintStyle: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant.withValues(alpha: 0.7),
+                ),
+                isDense: true,
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16.w,
+                  vertical: 12.h,
+                ),
+                prefixIcon: Padding(
+                  padding: EdgeInsets.only(left: 14.w, right: 10.w),
+                  child: AppIcon(
+                    icon: HugeIcons.strokeRoundedSearch01,
+                    size: 20.sp,
+                    color: cs.onSurfaceVariant,
+                  ),
+                ),
+                prefixIconConstraints: BoxConstraints(
+                  minWidth: 44.w,
+                  minHeight: 44.h,
                 ),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
                         icon: AppIcon(
                           icon: HugeIcons.strokeRoundedCancel01,
-                          size: 16.sp,
+                          size: 18.sp,
+                          color: cs.onSurfaceVariant,
                         ),
+                        splashRadius: 18.r,
                         onPressed: () {
                           _searchController.clear();
                           setState(() => _searchQuery = '');
                         },
                       )
                     : null,
+                suffixIconConstraints: BoxConstraints(
+                  minWidth: 44.w,
+                  minHeight: 44.h,
+                ),
                 filled: true,
                 fillColor: cs.surfaceContainerLow,
-                contentPadding: EdgeInsets.symmetric(vertical: 10.h),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  borderSide: BorderSide(color: cs.outlineVariant),
+                  borderSide: BorderSide(
+                    color: cs.outlineVariant.withValues(alpha: 0.6),
+                  ),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(16.r),
-                  borderSide: BorderSide(color: cs.outlineVariant),
+                  borderSide: BorderSide(
+                    color: cs.outlineVariant.withValues(alpha: 0.6),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16.r),
+                  borderSide: BorderSide(
+                    color: cs.primary,
+                    width: 1.5,
+                  ),
                 ),
               ),
             ),
@@ -286,6 +260,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
+        heroTag: 'directory_add_memorial_fab',
         backgroundColor: cs.primary,
         foregroundColor: Colors.white,
         elevation: 3,
@@ -293,12 +268,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
           borderRadius: BorderRadius.circular(16.r),
         ),
         onPressed: () {
-          final isFamily = _tabController.index == 0;
-          showGlobalToast(
-            message:
-                'Adding new ${isFamily ? "Family Member" : "Acquaintance"}...',
-            status: 'info',
-          );
+          context.push(AppRoutes.addMemorial);
         },
         icon: AppIcon(
           icon: HugeIcons.strokeRoundedAdd01,
@@ -306,7 +276,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
           size: 20.sp,
         ),
         label: Text(
-          _tabController.index == 0 ? 'Add Family Member' : 'Add Acquaintance',
+          _tabController.index == 0 ? 'Add Family Member' : 'Add Person Record',
           style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
         ),
       ),
@@ -314,7 +284,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
   }
 
   Widget _buildMemorialListView({
-    required List<SampleMemorial> memorials,
+    required List<Memorial> memorials,
     required String emptyMessage,
     required String emptySubtitle,
     required ColorScheme cs,
@@ -335,10 +305,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
         return MemorialCard(
           memorial: memorial,
           onTap: () {
-            showGlobalToast(
-              message: 'Opening ${memorial.fullName} profile...',
-              status: 'info',
-            );
+            context.push(AppRoutes.addMemorial, extra: memorial);
           },
         );
       },

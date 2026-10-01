@@ -1,54 +1,29 @@
 import 'package:memorial_keeper/src/imports/core_imports.dart';
 import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import '../providers/dua_cubit.dart';
+import '../widgets/widgets.dart';
 
-class _DuaItem {
-  final String title;
-  final String category;
-  final String arabic;
-  final String transliteration;
-  final String translation;
-  final String reference;
-
-  const _DuaItem({
-    required this.title,
-    required this.category,
-    required this.arabic,
-    required this.transliteration,
-    required this.translation,
-    required this.reference,
-  });
-}
-
-/// Authentic Islamic Duas & Remembrance for departed souls.
-class DuaLibraryScreen extends StatelessWidget {
+/// Authentic Islamic Duas & Remembrance for departed souls,
+/// synced directly from Firebase Firestore with offline-first fallback.
+class DuaLibraryScreen extends StatefulWidget {
   const DuaLibraryScreen({super.key});
 
-  final List<_DuaItem> _duas = const [
-    _DuaItem(
-      title: 'Dua for Parents (পিতামাতার জন্য দোয়া)',
-      category: 'Parents',
-      arabic: 'رَبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا',
-      transliteration: 'Rabbi-ghfir lee wa li-waalidayya warhamhuma kama rabbayani sagheera',
-      translation: 'My Lord, forgive me and my parents, and have mercy upon them as they brought me up when I was small.',
-      reference: 'Surah Al-Isra (17:24)',
-    ),
-    _DuaItem(
-      title: 'Visiting the Cemetery (কবর জিয়ারতের দোয়া)',
-      category: 'Ziyarat',
-      arabic: 'السَّلَامُ عَلَيْكُمْ دَارَ قَوْمٍ مُؤْمِنِينَ وَإِنَّا إِنْ شَاءَ اللَّهُ بِكُمْ لَاحِقُونَ',
-      transliteration: 'Assalaamu ‘alaykum daara qawmim-mu’mineen, wa innaa in shaa’ Allaahu bikum laahiqoon',
-      translation: 'Peace be upon you, O inhabitants of this dwelling of believers. Indeed, we shall, if Allah wills, join you.',
-      reference: 'Sahih Muslim 249',
-    ),
-    _DuaItem(
-      title: 'Comprehensive Forgiveness for All Deceased',
-      category: 'General',
-      arabic: 'اللَّهُمَّ اغْفِرْ لِحَيِّنَا وَمَيِّتِنَا وَشَاهِدِنَا وَغَائِبِنَا وَصَغِيرِنَا وَكَبِيرِنَا',
-      transliteration: 'Allaahummagh-fir li-hayyinaa wa mayyitinaa wa shaahidinaa wa ghaa’ibinaa wa sagheerinaa wa kabeerinaa',
-      translation: 'O Allah, forgive our living and our dead, those present and those absent, our young and our old.',
-      reference: 'Sunan Abi Dawud 3201',
-    ),
-  ];
+  @override
+  State<DuaLibraryScreen> createState() => _DuaLibraryScreenState();
+}
+
+class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Sync latest from Firebase on screen visit
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cubit = context.read<DuaCubit>();
+      if (cubit.state.duas.isEmpty) {
+        cubit.loadDuas();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,11 +31,29 @@ class DuaLibraryScreen extends StatelessWidget {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
+    final duaState = context.watch<DuaCubit>().state;
+    final duas = duaState.filteredDuas;
+
+    // Determine current language: use active language in cubit, defaulting to locale
+    final localeLang = context.locale.languageCode;
+    final activeLanguage = duaState.activeLanguage.isNotEmpty
+        ? duaState.activeLanguage
+        : (localeLang == 'bn' ? 'bn' : 'en');
+
+    // Extract categories
+    final allCategories = ['all'];
+    for (final d in duaState.duas) {
+      final cat = d.category.toLowerCase();
+      if (!allCategories.contains(cat)) {
+        allCategories.add(cat);
+      }
+    }
+
     return Scaffold(
       backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(
-          'Duas & Remembrance (দোয়া ও জিকির)',
+          'Duas & Remembrance',
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: cs.onSurface,
@@ -68,113 +61,188 @@ class DuaLibraryScreen extends StatelessWidget {
         ),
         elevation: 0,
         backgroundColor: cs.surface,
-      ),
-      body: ListView.builder(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
-        itemCount: _duas.length,
-        itemBuilder: (context, index) {
-          final dua = _duas[index];
-          return Container(
-            margin: EdgeInsets.only(bottom: 16.h),
-            padding: EdgeInsets.all(18.r),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18.r),
-              border: Border.all(color: cs.outlineVariant),
+        actions: [
+          IconButton(
+            icon: AppIcon(
+              icon: HugeIcons.strokeRoundedRefresh,
+              size: 20.sp,
+              color: cs.onSurfaceVariant,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            tooltip: 'Sync from Cloud',
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              context.read<DuaCubit>().loadDuas(forceRefresh: true);
+              showGlobalToast(
+                message: 'Checking cloud for new Duas...',
+                status: 'info',
+              );
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          // Top Control Bar: Language Switcher & Category Filter
+          Container(
+            padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 10.h),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        dua.title,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 8.w,
-                        vertical: 3.h,
-                      ),
-                      decoration: BoxDecoration(
-                        color: cs.primaryContainer,
-                        borderRadius: BorderRadius.circular(8.r),
-                      ),
-                      child: Text(
-                        dua.category,
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 12.h),
-                Container(
-                  padding: EdgeInsets.all(14.r),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHigh.withValues(alpha: 0.4),
-                    borderRadius: BorderRadius.circular(14.r),
-                  ),
-                  child: Text(
-                    dua.arabic,
-                    textAlign: TextAlign.center,
-                    textDirection: TextDirection.rtl,
-                    style: TextStyle(
-                      fontSize: 18.sp,
-                      fontWeight: FontWeight.bold,
-                      color: cs.onSurface,
-                      height: 1.6,
-                    ),
-                  ),
-                ),
-                SizedBox(height: 10.h),
                 Text(
-                  dua.translation,
-                  style: tt.bodySmall?.copyWith(
+                  'Translation Language:',
+                  style: tt.labelMedium?.copyWith(
                     color: cs.onSurfaceVariant,
-                    fontStyle: FontStyle.italic,
-                    height: 1.4,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(height: 8.h),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      dua.reference,
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                Container(
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(12.r),
+                    border: Border.all(
+                      color: cs.outlineVariant.withValues(alpha: 0.6),
                     ),
-                    IconButton(
-                      icon: AppIcon(
-                        icon: HugeIcons.strokeRoundedFavourite,
-                        color: cs.primary,
-                        size: 20.sp,
+                  ),
+                  padding: EdgeInsets.all(3.r),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _buildLangPill(
+                        label: 'English',
+                        code: 'en',
+                        isActive: activeLanguage == 'en',
+                        cs: cs,
+                        onTap: () {
+                          context.read<DuaCubit>().switchLanguage('en');
+                        },
                       ),
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        showGlobalToast(
-                          message: 'Dua recited & prayer sent.',
-                          status: 'success',
-                        );
-                      },
-                    ),
-                  ],
+                      _buildLangPill(
+                        label: 'বাংলা',
+                        code: 'bn',
+                        isActive: activeLanguage == 'bn',
+                        cs: cs,
+                        onTap: () {
+                          context.read<DuaCubit>().switchLanguage('bn');
+                        },
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+
+          // Categories Bar
+          if (allCategories.length > 2) ...[
+            SizedBox(
+              height: 38.h,
+              child: ListView.separated(
+                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                scrollDirection: Axis.horizontal,
+                itemCount: allCategories.length,
+                separatorBuilder: (_, __) => SizedBox(width: 8.w),
+                itemBuilder: (context, index) {
+                  final cat = allCategories[index];
+                  final isSelected = duaState.selectedCategory == cat;
+                  final label = cat == 'all'
+                      ? 'All'
+                      : cat[0].toUpperCase() + cat.substring(1);
+
+                  return InkWell(
+                    onTap: () {
+                      context.read<DuaCubit>().selectCategory(cat);
+                    },
+                    borderRadius: BorderRadius.circular(10.r),
+                    child: Container(
+                      padding: EdgeInsets.symmetric(
+                        horizontal: 14.w,
+                        vertical: 6.h,
+                      ),
+                      decoration: BoxDecoration(
+                        color: isSelected
+                            ? cs.primary
+                            : cs.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(10.r),
+                        border: Border.all(
+                          color: isSelected
+                              ? cs.primary
+                              : cs.outlineVariant.withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Text(
+                        label,
+                        style: TextStyle(
+                          fontSize: 12.sp,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.w500,
+                          color: isSelected ? Colors.white : cs.onSurface,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            SizedBox(height: 10.h),
+          ],
+
+          // Dua Cards List
+          Expanded(
+            child: RefreshIndicator(
+              onRefresh: () =>
+                  context.read<DuaCubit>().loadDuas(forceRefresh: true),
+              color: cs.primary,
+              child: duas.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No Duas found in this category',
+                        style: tt.bodyMedium?.copyWith(
+                          color: cs.onSurfaceVariant,
+                        ),
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 24.h),
+                      itemCount: duas.length,
+                      itemBuilder: (context, index) {
+                        final dua = duas[index];
+                        return DuaCard(
+                          dua: dua,
+                          activeLanguage: activeLanguage,
+                        );
+                      },
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLangPill({
+    required String label,
+    required String code,
+    required bool isActive,
+    required ColorScheme cs,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
+        decoration: BoxDecoration(
+          color: isActive ? cs.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(9.r),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 12.sp,
+            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+            color: isActive ? Colors.white : cs.onSurfaceVariant,
+          ),
+        ),
       ),
     );
   }

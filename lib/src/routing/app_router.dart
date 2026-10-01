@@ -14,6 +14,9 @@ import 'package:memorial_keeper/src/features/onboarding/presentation/screens/onb
 import 'package:memorial_keeper/src/shared/widgets/ui/ui_showcase_screen.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorial_keeper/src/features/memorials/presentation/screens/add_edit_memorial_screen.dart';
+
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
   initialLocation: AppRoutes.home,
@@ -43,6 +46,13 @@ final GoRouter appRouter = GoRouter(
       path: AppRoutes.home,
       name: 'home',
       builder: (context, state) => const MainNavScreen(),
+    ),
+    GoRoute(
+      path: AppRoutes.addMemorial,
+      name: 'addMemorial',
+      builder: (context, state) => AddEditMemorialScreen(
+        existingMemorial: state.extra as Memorial?,
+      ),
     ),
     if (kDebugMode)
       GoRoute(

@@ -27,10 +27,16 @@ class AppIcon extends StatelessWidget {
       );
     }
 
-    return HugeIcon(
-      icon: icon,
-      size: iconSize,
-      color: iconColor,
+    return SizedBox(
+      width: iconSize,
+      height: iconSize,
+      child: Center(
+        child: HugeIcon(
+          icon: icon,
+          size: iconSize,
+          color: iconColor,
+        ),
+      ),
     );
   }
 }
