@@ -77,6 +77,9 @@ dependencies:
   easy_localization: ^3.0.8
 
   flutter_native_splash: ^2.4.7
+  sqflite: ^2.4.4
+  path: ^1.9.1
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:

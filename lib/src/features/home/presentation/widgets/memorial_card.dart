@@ -1,7 +1,9 @@
+import 'dart:io';
 import 'package:memorial_keeper/src/imports/core_imports.dart';
 import 'package:memorial_keeper/src/imports/packages_imports.dart';
-
-import '../models/sample_memorial.dart';
+import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorial_keeper/src/features/memorials/presentation/widgets/delete_memorial_sheet.dart';
 
 /// Dignified memorial card with avatar frame, relationship badge, lifespan, and resting place pill.
 class MemorialCard extends StatelessWidget {
@@ -11,15 +13,33 @@ class MemorialCard extends StatelessWidget {
     this.onTap,
   });
 
-  final SampleMemorial memorial;
+  final Memorial memorial;
   final VoidCallback? onTap;
 
-  void _onSendDua(BuildContext context) {
+  void _onToggleFavorite(BuildContext context) {
     HapticFeedback.lightImpact();
+    context.read<MemorialBloc>().add(ToggleFavoriteEvent(memorial.id));
     showGlobalToast(
-      message: 'Dua sent for ${memorial.fullName}.',
-      status: 'success',
+      message: memorial.isFavorite
+          ? 'Removed ${memorial.fullName} from favorites'
+          : 'Added ${memorial.fullName} to favorites',
+      status: 'info',
     );
+  }
+
+  Future<void> _onLongPressDelete(BuildContext context) async {
+    final confirmed = await showDeleteMemorialSheet(
+      context,
+      fullName: memorial.fullName,
+    );
+
+    if (confirmed && context.mounted) {
+      context.read<MemorialBloc>().add(DeleteMemorialEvent(memorial.id));
+      showGlobalToast(
+        message: 'Deleted record for ${memorial.fullName}',
+        status: 'info',
+      );
+    }
   }
 
   @override
@@ -28,135 +48,186 @@ class MemorialCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18.r),
-      child: Container(
-        margin: EdgeInsets.only(bottom: 12.h),
-        padding: EdgeInsets.all(16.r),
-        decoration: BoxDecoration(
-          color: cs.surfaceContainerLow,
-          borderRadius: BorderRadius.circular(18.r),
-          border: Border.all(color: cs.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Photo Avatar frame
-                Container(
-                  width: 52.r,
-                  height: 52.r,
-                  decoration: BoxDecoration(
-                    color: cs.primaryContainer,
-                    borderRadius: BorderRadius.circular(14.r),
-                    border: Border.all(
-                      color: cs.primary.withValues(alpha: 0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Center(
-                    child: AppIcon(
-                      icon: HugeIcons.strokeRoundedUser,
-                      color: cs.primary,
-                      size: 26.sp,
-                    ),
-                  ),
-                ),
-                SizedBox(width: 14.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        memorial.fullName,
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                          fontSize: 15.sp,
-                        ),
+    final hasPhoto = memorial.profilePhotoPath != null &&
+        File(memorial.profilePhotoPath!).existsSync();
+
+    return Container(
+      margin: EdgeInsets.only(bottom: 12.h),
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        onLongPress: () => _onLongPressDelete(context),
+        child: Container(
+          padding: EdgeInsets.all(16.r),
+          decoration: BoxDecoration(
+            color: cs.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(18.r),
+            border: Border.all(
+              color: memorial.isFavorite
+                  ? cs.primary.withValues(alpha: 0.5)
+                  : cs.outlineVariant,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Photo Avatar frame
+                  Container(
+                    width: 52.r,
+                    height: 52.r,
+                    decoration: BoxDecoration(
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color: cs.primary.withValues(alpha: 0.3),
+                        width: 1.5,
                       ),
-                      SizedBox(height: 3.h),
-                      Container(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6.w,
-                          vertical: 2.h,
+                      image: hasPhoto
+                          ? DecorationImage(
+                              image:
+                                  FileImage(File(memorial.profilePhotoPath!)),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: !hasPhoto
+                        ? Center(
+                            child: AppIcon(
+                              icon: memorial.gender == 'female'
+                                  ? HugeIcons.strokeRoundedUser
+                                  : HugeIcons.strokeRoundedUser,
+                              color: cs.primary,
+                              size: 26.sp,
+                            ),
+                          )
+                        : null,
+                  ),
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                memorial.fullName,
+                                style: tt.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: cs.onSurface,
+                                  fontSize: 15.sp,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            if (memorial.arabicName != null) ...[
+                              SizedBox(width: 6.w),
+                              Text(
+                                memorial.arabicName!,
+                                style: TextStyle(
+                                  fontSize: 12.sp,
+                                  color: cs.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ],
                         ),
-                        decoration: BoxDecoration(
-                          color: cs.secondaryContainer,
-                          borderRadius: BorderRadius.circular(6.r),
-                        ),
-                        child: Text(
-                          memorial.relationship,
-                          style: tt.labelSmall?.copyWith(
-                            color: cs.onSecondaryContainer,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 11.sp,
+                        SizedBox(height: 3.h),
+                        Container(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: 6.w,
+                            vertical: 2.h,
+                          ),
+                          decoration: BoxDecoration(
+                            color: cs.secondaryContainer,
+                            borderRadius: BorderRadius.circular(6.r),
+                          ),
+                          child: Text(
+                            memorial.displayRelationship,
+                            style: tt.labelSmall?.copyWith(
+                              color: cs.onSecondaryContainer,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 11.sp,
+                            ),
                           ),
                         ),
+                        if (memorial.lifespanDisplay.isNotEmpty) ...[
+                          SizedBox(height: 6.h),
+                          Text(
+                            memorial.lifespanDisplay,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurfaceVariant,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  // Favorite / Tribute Button
+                  IconButton(
+                    style: IconButton.styleFrom(
+                      backgroundColor: memorial.isFavorite
+                          ? cs.primaryContainer
+                          : cs.surfaceContainerHighest,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12.r),
                       ),
-                      SizedBox(height: 6.h),
-                      Text(
-                        '${memorial.birthYear} – ${memorial.passingYear} (${memorial.age} yrs)',
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                          fontWeight: FontWeight.w500,
+                    ),
+                    icon: AppIcon(
+                      icon: memorial.isFavorite
+                          ? Icons.favorite
+                          : HugeIcons.strokeRoundedFavourite,
+                      color: memorial.isFavorite
+                          ? cs.primary
+                          : cs.onSurfaceVariant,
+                      size: 18.sp,
+                    ),
+                    onPressed: () => _onToggleFavorite(context),
+                  ),
+                ],
+              ),
+              if (memorial.restingPlaceDisplay.isNotEmpty) ...[
+                SizedBox(height: 12.h),
+                // Resting Place Pill
+                Container(
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                  decoration: BoxDecoration(
+                    color: cs.surfaceContainerHigh.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(10.r),
+                  ),
+                  child: Row(
+                    children: [
+                      AppIcon(
+                        icon: HugeIcons.strokeRoundedLocation01,
+                        size: 14.sp,
+                        color: cs.primary,
+                      ),
+                      SizedBox(width: 6.w),
+                      Expanded(
+                        child: Text(
+                          memorial.restingPlaceDisplay,
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurface,
+                            fontSize: 11.5.sp,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
                 ),
-                // Tribute / Dua Button
-                IconButton(
-                  style: IconButton.styleFrom(
-                    backgroundColor: cs.surfaceContainerHighest,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12.r),
-                    ),
-                  ),
-                  icon: AppIcon(
-                    icon: HugeIcons.strokeRoundedFavourite,
-                    color: cs.primary,
-                    size: 18.sp,
-                  ),
-                  onPressed: () => _onSendDua(context),
-                ),
               ],
-            ),
-            SizedBox(height: 12.h),
-            // Resting Place Pill
-            Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-              decoration: BoxDecoration(
-                color: cs.surfaceContainerHigh.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(10.r),
-              ),
-              child: Row(
-                children: [
-                  AppIcon(
-                    icon: HugeIcons.strokeRoundedLocation01,
-                    size: 14.sp,
-                    color: cs.primary,
-                  ),
-                  SizedBox(width: 6.w),
-                  Expanded(
-                    child: Text(
-                      memorial.restingPlace,
-                      style: tt.bodySmall?.copyWith(
-                        color: cs.onSurface,
-                        fontSize: 11.5.sp,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

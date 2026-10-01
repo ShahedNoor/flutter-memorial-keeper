@@ -46,6 +46,7 @@ Future<void> _bootstrap() async {
   await EasyLocalization.ensureInitialized();
   await dotenv.load(fileName: '.env', isOptional: true);
 
+  await StorageService.instance.init();
   await AppConfig.init();
   AppLogger.success(
     'Application configuration initialized',

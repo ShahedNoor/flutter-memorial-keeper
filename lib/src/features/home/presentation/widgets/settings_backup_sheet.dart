@@ -13,6 +13,7 @@ class SettingsBackupSheet extends StatelessWidget {
       context: context,
       backgroundColor: cs.surface,
       isScrollControlled: true,
+      showDragHandle: false,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24.r)),
       ),
@@ -29,24 +30,45 @@ class SettingsBackupSheet extends StatelessWidget {
     final tt = theme.textTheme;
 
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 16.h),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Center(
-              child: Container(
-                width: 40.w,
-                height: 4.h,
-                decoration: BoxDecoration(
-                  color: cs.outlineVariant,
-                  borderRadius: BorderRadius.circular(2.r),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Top Bar: Centered Drag Handle with Close Button on the Right
+          Padding(
+            padding: EdgeInsets.fromLTRB(16.w, 8.h, 12.w, 0),
+            child: Row(
+              children: [
+                SizedBox(width: 40.w), // Balance to keep pill centered
+                Expanded(
+                  child: Center(
+                    child: Container(
+                      width: 38.w,
+                      height: 4.h,
+                      decoration: BoxDecoration(
+                        color: cs.outlineVariant,
+                        borderRadius: BorderRadius.circular(2.r),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                IconButton(
+                  visualDensity: VisualDensity.compact,
+                  icon: AppIcon(
+                    icon: HugeIcons.strokeRoundedCancel01,
+                    size: 20.sp,
+                    color: cs.onSurfaceVariant,
+                  ),
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ],
             ),
-            SizedBox(height: 16.h),
-            Row(
+          ),
+
+          // Title Row
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 14.h),
+            child: Row(
               children: [
                 Container(
                   padding: EdgeInsets.all(8.r),
@@ -70,7 +92,14 @@ class SettingsBackupSheet extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 20.h),
+          ),
+
+          Padding(
+            padding: EdgeInsets.fromLTRB(20.w, 0, 20.w, 16.h),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
             // Account / Sync Card
             Container(
               padding: EdgeInsets.all(16.r),
@@ -184,6 +213,8 @@ class SettingsBackupSheet extends StatelessWidget {
           ],
         ),
       ),
-    );
+    ],
+  ),
+);
   }
 }
