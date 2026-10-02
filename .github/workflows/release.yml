@@ -1,0 +1,94 @@
+name: Build & Release APK
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Cancel any in-progress runs on main if a new merge arrives
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract version from pubspec.yaml
+        id: get_version
+        run: |
+          VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | sed 's/[[:space:]]//g' | cut -d'+' -f1 | tr -d '"' | tr -d "'")
+          TAG_NAME="v$VERSION"
+          echo "VERSION=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "TAG_NAME=$TAG_NAME" >> "$GITHUB_OUTPUT"
+          echo "Extracted Version: $VERSION"
+          echo "Target Release Tag: $TAG_NAME"
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Android Release APK
+        run: flutter build apk --release
+
+      - name: Prepare APK artifact
+        run: |
+          mkdir -p release-artifacts
+          cp build/app/outputs/flutter-apk/app-release.apk "release-artifacts/memorial-keeper-${{ steps.get_version.outputs.TAG_NAME }}.apk"
+
+      - name: Delete previous release and tag
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Find the existing latest release tag
+          PREV_TAG=$(gh release list --limit 1 --json tagName --jq '.[0].tagName // empty')
+          if [ -n "$PREV_TAG" ]; then
+            echo "Found previous release: $PREV_TAG. Deleting release and associated tag..."
+            gh release delete "$PREV_TAG" --cleanup-tag -y || true
+            git push --delete origin "$PREV_TAG" 2>/dev/null || true
+          else
+            echo "No previous release found."
+          fi
+
+          # If the new target tag already exists, ensure it is cleaned up before recreating
+          NEW_TAG="${{ steps.get_version.outputs.TAG_NAME }}"
+          if gh release view "$NEW_TAG" > /dev/null 2>&1; then
+            echo "Target tag $NEW_TAG already exists. Cleaning up before recreation..."
+            gh release delete "$NEW_TAG" --cleanup-tag -y || true
+            git push --delete origin "$NEW_TAG" 2>/dev/null || true
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.get_version.outputs.TAG_NAME }}"
+          APK_PATH="release-artifacts/memorial-keeper-${TAG}.apk"
+
+          gh release create "$TAG" "$APK_PATH" \
+            --title "Release $TAG" \
+            --generate-notes
