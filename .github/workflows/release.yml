@@ -9,10 +9,16 @@ on:
 permissions:
   contents: write
 
+# Cancel any in-progress runs on main if a new merge arrives
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   release:
     name: Build & Publish Release
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout repository
