@@ -1,8 +1,8 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
-import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
-import 'package:memorial_keeper/src/features/home/presentation/widgets/home_empty_state.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorialkeeper/src/features/home/presentation/widgets/home_empty_state.dart';
 
 /// Cemetery and Resting Places directory dynamically aggregated from user-added memorial records.
 class RestingPlacesScreen extends StatelessWidget {
@@ -156,7 +156,7 @@ class RestingPlacesScreen extends StatelessWidget {
                       ...residents.map(
                         (m) => InkWell(
                           onTap: () {
-                            context.push(AppRoutes.addMemorial, extra: m);
+                            context.push(AppRoutes.memorialDetail, extra: m);
                           },
                           borderRadius: BorderRadius.circular(8.r),
                           child: Padding(

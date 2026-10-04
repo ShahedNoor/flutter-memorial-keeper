@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../../memorials/domain/entities/memorial.dart';
 
 /// Modal bottom sheet displaying the family root line and generational ladder.
@@ -329,7 +329,7 @@ class GenerationsPeekSheet extends StatelessWidget {
         child: InkWell(
           onTap: () {
             Navigator.of(context).pop();
-            context.push(AppRoutes.addMemorial, extra: m);
+            context.push(AppRoutes.memorialDetail, extra: m);
           },
           child: Padding(
             padding: EdgeInsets.all(12.r),

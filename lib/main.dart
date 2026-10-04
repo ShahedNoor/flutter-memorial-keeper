@@ -4,7 +4,6 @@ import 'src/imports/core_imports.dart';
 import 'src/imports/packages_imports.dart';
 import 'src/app.dart';
 
-
 Future<void> main() async {
   await runZonedGuarded(_bootstrap, (error, stackTrace) {
     AppLogger.error(
@@ -57,7 +56,7 @@ Future<void> _bootstrap() async {
     const LocalizationWrapper(
       child: StateWrapper(
         child: App(),
-    ),
+      ),
     ),
   );
 

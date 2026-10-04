@@ -1,21 +1,22 @@
 import 'package:flutter/widgets.dart';
 import 'package:go_router/go_router.dart';
-import 'package:memorial_keeper/src/middleware/app_route_observer.dart';
-import 'package:memorial_keeper/src/routing/global_navigator.dart';
-import 'package:memorial_keeper/src/routing/app_routes.dart';
+import 'package:memorialkeeper/src/middleware/app_route_observer.dart';
+import 'package:memorialkeeper/src/routing/global_navigator.dart';
+import 'package:memorialkeeper/src/routing/app_routes.dart';
 
-import 'package:memorial_keeper/src/features/auth/presentation/screens/login_screen.dart';
-import 'package:memorial_keeper/src/features/auth/presentation/screens/signup_screen.dart';
-import 'package:memorial_keeper/src/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/screens/login_screen.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/screens/signup_screen.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/screens/forgot_password_screen.dart';
 
-import 'package:memorial_keeper/src/features/home/presentation/screens/main_nav_screen.dart';
-import 'package:memorial_keeper/src/features/onboarding/presentation/screens/onboarding_page.dart';
+import 'package:memorialkeeper/src/features/home/presentation/screens/main_nav_screen.dart';
+import 'package:memorialkeeper/src/features/onboarding/presentation/screens/onboarding_page.dart';
 
-import 'package:memorial_keeper/src/shared/widgets/ui/ui_showcase_screen.dart';
+import 'package:memorialkeeper/src/shared/widgets/ui/ui_showcase_screen.dart';
 import 'package:flutter/foundation.dart';
 
-import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/screens/add_edit_memorial_screen.dart';
+import 'package:memorialkeeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/screens/add_edit_memorial_screen.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/screens/memorial_profile_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   navigatorKey: rootNavigatorKey,
@@ -52,6 +53,13 @@ final GoRouter appRouter = GoRouter(
       name: 'addMemorial',
       builder: (context, state) => AddEditMemorialScreen(
         existingMemorial: state.extra as Memorial?,
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.memorialDetail,
+      name: 'memorialDetail',
+      builder: (context, state) => MemorialProfileScreen(
+        memorial: state.extra as Memorial,
       ),
     ),
     if (kDebugMode)

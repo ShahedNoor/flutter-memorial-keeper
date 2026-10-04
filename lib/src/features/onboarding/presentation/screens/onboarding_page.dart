@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/imports/imports.dart';
+import 'package:memorialkeeper/src/imports/imports.dart';
 
 class OnboardingPage extends StatefulWidget {
   const OnboardingPage({super.key});

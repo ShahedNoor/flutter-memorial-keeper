@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -16,7 +16,7 @@ class App extends StatelessWidget {
 
   Widget _buildMaterialApp(BuildContext context) {
     return MaterialApp.router(
-      title: 'memorial_keeper',
+      title: 'Memorial Keeper',
       debugShowCheckedModeBanner: false,
       theme: buildLightTheme(primaryColorHex: '#0D5C46'),
       darkTheme: buildDarkTheme(primaryColorHex: '#10B981'),

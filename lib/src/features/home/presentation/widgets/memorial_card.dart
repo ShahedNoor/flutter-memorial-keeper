@@ -1,9 +1,9 @@
 import 'dart:io';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
-import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/widgets/delete_memorial_sheet.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/widgets/delete_memorial_sheet.dart';
 
 /// Dignified memorial card with avatar frame, relationship badge, lifespan, and resting place pill.
 class MemorialCard extends StatelessWidget {
@@ -55,7 +55,8 @@ class MemorialCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 12.h),
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,
-        onTap: onTap,
+        onTap: onTap ??
+            () => context.push(AppRoutes.memorialDetail, extra: memorial),
         onLongPress: () => _onLongPressDelete(context),
         child: Container(
           padding: EdgeInsets.all(16.r),
@@ -110,32 +111,31 @@ class MemorialCard extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                memorial.fullName,
-                                style: tt.titleSmall?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: cs.onSurface,
-                                  fontSize: 15.sp,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
+                        Text.rich(
+                          TextSpan(
+                            text: memorial.fullName,
+                            style: tt.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: cs.onSurface,
+                              fontSize: 15.sp,
+                              height: 1.25,
                             ),
-                            if (memorial.arabicName != null) ...[
-                              SizedBox(width: 6.w),
-                              Text(
-                                memorial.arabicName!,
-                                style: TextStyle(
-                                  fontSize: 12.sp,
-                                  color: cs.primary,
-                                  fontWeight: FontWeight.w600,
+                            children: [
+                              if (memorial.arabicName != null &&
+                                  memorial.arabicName!.trim().isNotEmpty) ...[
+                                TextSpan(
+                                  text: '  ${memorial.arabicName!}',
+                                  style: TextStyle(
+                                    fontSize: 13.sp,
+                                    color: cs.primary,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
-                          ],
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                         ),
                         SizedBox(height: 3.h),
                         Container(
@@ -195,34 +195,72 @@ class MemorialCard extends StatelessWidget {
               if (memorial.restingPlaceDisplay.isNotEmpty) ...[
                 SizedBox(height: 12.h),
                 // Resting Place Pill
-                Container(
-                  padding:
-                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHigh.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(10.r),
-                  ),
-                  child: Row(
-                    children: [
-                      AppIcon(
-                        icon: HugeIcons.strokeRoundedLocation01,
-                        size: 14.sp,
-                        color: cs.primary,
-                      ),
-                      SizedBox(width: 6.w),
-                      Expanded(
-                        child: Text(
-                          memorial.restingPlaceDisplay,
-                          style: tt.bodySmall?.copyWith(
-                            color: cs.onSurface,
-                            fontSize: 11.5.sp,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                InkWell(
+                  onTap: (memorial.latitude != null && memorial.longitude != null)
+                      ? () => LocationService.instance.openInMaps(
+                            memorial.latitude!,
+                            memorial.longitude!,
+                            label: memorial.cemeteryName ?? memorial.fullName,
+                          )
+                      : null,
+                  borderRadius: BorderRadius.circular(10.r),
+                  child: Container(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 10.w, vertical: 6.h),
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHigh.withValues(alpha: 0.5),
+                      borderRadius: BorderRadius.circular(10.r),
+                    ),
+                    child: Row(
+                      children: [
+                        AppIcon(
+                          icon: HugeIcons.strokeRoundedLocation01,
+                          size: 14.sp,
+                          color: cs.primary,
                         ),
-                      ),
-                    ],
+                        SizedBox(width: 6.w),
+                        Expanded(
+                          child: Text(
+                            memorial.restingPlaceDisplay,
+                            style: tt.bodySmall?.copyWith(
+                              color: cs.onSurface,
+                              fontSize: 11.5.sp,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (memorial.latitude != null &&
+                            memorial.longitude != null) ...[
+                          SizedBox(width: 4.w),
+                          Container(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 6.w, vertical: 2.h),
+                            decoration: BoxDecoration(
+                              color: cs.primaryContainer,
+                              borderRadius: BorderRadius.circular(4.r),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.navigation_rounded,
+                                    size: 10.sp, color: cs.primary),
+                                SizedBox(width: 2.w),
+                                Text(
+                                  'GPS',
+                                  style: TextStyle(
+                                    fontSize: 9.sp,
+                                    fontWeight: FontWeight.bold,
+                                    color: cs.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
                 ),
               ],

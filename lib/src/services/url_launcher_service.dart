@@ -11,6 +11,14 @@ class UrlLauncherService {
     final uri = Uri.parse(formattedUrl);
     return runTask(
       () async {
+        try {
+          final launched = await launchUrl(
+            uri,
+            mode: mode ?? LaunchMode.externalApplication,
+          );
+          if (launched) return;
+        } catch (_) {}
+
         if (await canLaunchUrl(uri)) {
           await launchUrl(uri, mode: mode ?? LaunchMode.externalApplication);
         } else {

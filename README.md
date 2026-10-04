@@ -1,4 +1,4 @@
-# memorial_keeper
+# memorialkeeper
 
 Generated with the Flutter Scaffolding Wizard.
 
@@ -13,7 +13,7 @@ Generated with the Flutter Scaffolding Wizard.
 
 If you downloaded this project from the web wizard, create platform folders first (skip if you used the FlutterInit CLI):
 ```bash
-flutter create . --project-name memorial_keeper --org com.shahednoor
+flutter create . --project-name memorialkeeper --org com.shahednoor
 ```
 
 Then:

@@ -1,5 +1,5 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 /// Shows a modern floating bottom sheet to pick or remove a photo.
 Future<String?> showPhotoPickerSheet(

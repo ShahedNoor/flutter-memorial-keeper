@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/services/local_database_service.dart';
+import 'package:memorialkeeper/src/services/local_database_service.dart';
 import '../models/memorial_model.dart';
 
 abstract class MemorialLocalDataSource {

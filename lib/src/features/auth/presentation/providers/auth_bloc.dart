@@ -1,6 +1,6 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
-import 'package:memorial_keeper/src/features/auth/domain/repositories/auth_repository.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/features/auth/domain/repositories/auth_repository.dart';
 
 sealed class AuthEvent {
   const AuthEvent();

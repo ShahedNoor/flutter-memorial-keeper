@@ -4,3 +4,7 @@ export 'memorial_avatar_picker.dart';
 export 'lifespan_dates_section.dart';
 export 'resting_place_section.dart';
 export 'delete_memorial_sheet.dart';
+export 'grave_map_picker_sheet.dart';
+export 'memorial_share_card.dart';
+export 'share_privacy_sheet.dart';
+export 'profile/profile.dart';

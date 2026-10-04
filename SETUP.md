@@ -1,4 +1,4 @@
-# 🎉 Welcome to memorial_keeper!
+# 🎉 Welcome to memorialkeeper!
 
 This project was generated dynamically based on your specific requirements. Before running your app for the first time, follow this brief setup guide to configure the required environment variables, permissions, and dependencies locally.
 
@@ -12,7 +12,7 @@ Skip this step if you generated the project with the FlutterInit CLI (`flutter c
 
 From the project root:
 ```bash
-flutter create . --project-name memorial_keeper --org com.shahednoor
+flutter create . --project-name memorialkeeper --org com.shahednoor
 ```
 
 This adds the platform folders without overwriting your generated Dart sources.

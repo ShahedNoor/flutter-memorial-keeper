@@ -1,9 +1,9 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
-import 'package:memorial_keeper/src/features/memorials/domain/entities/memorial.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
-import 'package:memorial_keeper/src/features/home/presentation/widgets/home_empty_state.dart';
-import 'package:memorial_keeper/src/features/home/presentation/widgets/memorial_card.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/features/memorials/domain/entities/memorial.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorialkeeper/src/features/home/presentation/widgets/home_empty_state.dart';
+import 'package:memorialkeeper/src/features/home/presentation/widgets/memorial_card.dart';
 
 /// Comprehensive Memorial Directory with dedicated Family and Others tabs.
 class MemorialDirectoryScreen extends StatefulWidget {
@@ -305,7 +305,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
         return MemorialCard(
           memorial: memorial,
           onTap: () {
-            context.push(AppRoutes.addMemorial, extra: memorial);
+            context.push(AppRoutes.memorialDetail, extra: memorial);
           },
         );
       },

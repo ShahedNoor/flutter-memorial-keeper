@@ -1,7 +1,7 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
-import 'package:memorial_keeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
 import '../widgets/widgets.dart';
 
 /// Clean, modular Home Page orchestrating header, dua banner, stats, filters, and memorial records.
@@ -276,7 +276,7 @@ class _HomePageState extends State<HomePage> {
                     (memorial) => MemorialCard(
                       memorial: memorial,
                       onTap: () {
-                        context.push(AppRoutes.addMemorial, extra: memorial);
+                        context.push(AppRoutes.memorialDetail, extra: memorial);
                       },
                     ),
                   ),

@@ -1,5 +1,5 @@
-import 'package:memorial_keeper/src/utils/utils.dart';
-import 'package:memorial_keeper/src/features/auth/domain/entities/user.dart';
+import 'package:memorialkeeper/src/utils/utils.dart';
+import 'package:memorialkeeper/src/features/auth/domain/entities/user.dart';
 
 abstract class AuthRepository {
   /// Stream of auth state changes. Emits AppUser when authenticated, null when not.
