@@ -1,4 +1,4 @@
-# Design system — memorial_keeper
+# Design system — memorialkeeper
 
 This file documents the design conventions established at generation time. Consult it before changing UI code.
 
@@ -34,7 +34,7 @@ This file documents the design conventions established at generation time. Consu
 
 ## Spacing, borders, motion
 
-Import tokens via `package:memorial_keeper/src/theme/theme_constants.dart`.
+Import tokens via `package:memorialkeeper/src/theme/theme_constants.dart`.
 
 | Token class | Purpose |
 |-------------|---------|

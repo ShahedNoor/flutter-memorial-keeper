@@ -1,7 +1,7 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
-import 'package:memorial_keeper/src/features/auth/presentation/providers/auth_bloc.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/providers/auth_bloc.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});

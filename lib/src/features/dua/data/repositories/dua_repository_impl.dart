@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/utils/utils.dart';
+import 'package:memorialkeeper/src/utils/utils.dart';
 import '../../domain/entities/dua.dart';
 import '../../domain/repositories/dua_repository.dart';
 import '../datasources/dua_local_datasource.dart';

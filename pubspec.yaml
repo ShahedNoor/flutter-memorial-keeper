@@ -1,4 +1,4 @@
-name: memorial_keeper
+name: memorialkeeper
 description: Preserve family tree, resting places, photos &amp; Dua for departed loved ones.
 publish_to: "none"
 version: 1.0.0+1
@@ -80,6 +80,10 @@ dependencies:
   sqflite: ^2.4.4
   path: ^1.9.1
   uuid: ^4.6.0
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.0.1
+  share_plus: ^12.0.2
 
 dev_dependencies:
   flutter_test:

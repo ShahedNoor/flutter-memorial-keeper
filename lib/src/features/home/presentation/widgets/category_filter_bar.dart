@@ -1,5 +1,5 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 /// Horizontal scrollable category filter chips.
 class CategoryFilterBar extends StatelessWidget {

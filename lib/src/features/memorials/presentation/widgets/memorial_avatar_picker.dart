@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 /// Circular profile avatar picker with camera icon overlay and status label.
 class MemorialAvatarPicker extends StatelessWidget {

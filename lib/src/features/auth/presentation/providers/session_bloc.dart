@@ -1,7 +1,7 @@
 import 'dart:async';
-import 'package:memorial_keeper/src/imports/imports.dart';
-import 'package:memorial_keeper/src/features/auth/domain/entities/user.dart';
-import 'package:memorial_keeper/src/features/auth/domain/repositories/auth_repository.dart';
+import 'package:memorialkeeper/src/imports/imports.dart';
+import 'package:memorialkeeper/src/features/auth/domain/entities/user.dart';
+import 'package:memorialkeeper/src/features/auth/domain/repositories/auth_repository.dart';
 
 /// Exhaustive session variants — prefer `switch (state)` over status enums.
 sealed class SessionState {

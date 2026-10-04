@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:memorial_keeper/src/services/storage_service.dart';
+import 'package:memorialkeeper/src/services/storage_service.dart';
 import '../models/dua_model.dart';
 
 abstract class DuaLocalDataSource {

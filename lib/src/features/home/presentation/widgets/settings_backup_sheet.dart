@@ -1,7 +1,7 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
-import 'package:memorial_keeper/src/features/auth/presentation/providers/session_bloc.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/providers/session_bloc.dart';
 
 /// Modal bottom sheet for app settings, data export, and optional cloud backup.
 class SettingsBackupSheet extends StatelessWidget {

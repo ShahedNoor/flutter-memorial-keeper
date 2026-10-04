@@ -1,6 +1,6 @@
 import 'dart:io';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../../memorials/domain/entities/memorial.dart';
 
 /// Modal bottom sheet displaying resting places and cemetery groupings.
@@ -281,7 +281,7 @@ class RestingPlacesPeekSheet extends StatelessWidget {
               dense: true,
               onTap: () {
                 Navigator.of(context).pop();
-                context.push(AppRoutes.addMemorial, extra: m);
+                context.push(AppRoutes.memorialDetail, extra: m);
               },
               leading: Container(
                 width: 32.r,

@@ -8,8 +8,8 @@ class LocalDatabaseService {
   LocalDatabaseService._();
   static final LocalDatabaseService instance = LocalDatabaseService._();
 
-  static const String _dbName = 'memorial_keeper.db';
-  static const int _dbVersion = 1;
+  static const String _dbName = 'memorialkeeper.db';
+  static const int _dbVersion = 2;
   static const String tableMemorials = 'memorials';
 
   Database? _database;
@@ -28,7 +28,16 @@ class LocalDatabaseService {
       dbPath,
       version: _dbVersion,
       onCreate: _onCreate,
+      onUpgrade: _onUpgrade,
     );
+  }
+
+  Future<void> _onUpgrade(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute(
+        'ALTER TABLE $tableMemorials ADD COLUMN mapStyle TEXT NOT NULL DEFAULT \'streets\'',
+      );
+    }
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -51,6 +60,7 @@ class LocalDatabaseService {
         gravePlot TEXT,
         latitude REAL,
         longitude REAL,
+        mapStyle TEXT NOT NULL DEFAULT 'streets',
         profilePhotoPath TEXT,
         gravePhotoPath TEXT,
         memoryPhotoPaths TEXT,

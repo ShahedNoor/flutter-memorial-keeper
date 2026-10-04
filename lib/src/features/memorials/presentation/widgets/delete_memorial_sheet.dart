@@ -1,5 +1,5 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 /// Shows a respectful confirmation bottom sheet to delete a memorial record,
 /// requiring the user to type 'delete' to prevent accidental loss.

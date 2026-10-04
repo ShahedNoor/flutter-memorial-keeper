@@ -1,5 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:memorial_keeper/src/config/app_config.dart';
+import 'package:memorialkeeper/src/config/app_config.dart';
 import '../models/dua_model.dart';
 
 abstract class DuaRemoteDataSource {

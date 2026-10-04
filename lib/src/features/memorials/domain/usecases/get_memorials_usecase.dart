@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/utils/utils.dart';
+import 'package:memorialkeeper/src/utils/utils.dart';
 import '../entities/memorial.dart';
 import '../repositories/memorial_repository.dart';
 

@@ -12,6 +12,7 @@ abstract final class AppRoutes {
   static const String signup = '/signup';
   static const String forgotPassword = '/forgot-password';
   static const String addMemorial = '/memorials/add';
+  static const String memorialDetail = '/memorials/detail';
   /// Debug-only component gallery.
   static const String uiShowcase = '/debug/ui-showcase';
 }

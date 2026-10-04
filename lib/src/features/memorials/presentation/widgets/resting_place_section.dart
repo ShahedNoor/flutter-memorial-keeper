@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
-/// Form section managing Cemetery / Resting place details and tombstone photo.
+/// Form section managing Cemetery / Resting place details, GPS coordinates, and tombstone photo.
 class RestingPlaceSection extends StatelessWidget {
   const RestingPlaceSection({
     super.key,
@@ -12,6 +12,11 @@ class RestingPlaceSection extends StatelessWidget {
     required this.gravePhotoPath,
     required this.onTapGravePhoto,
     required this.inputDecoration,
+    this.latitude,
+    this.longitude,
+    required this.onTapPickOnMap,
+    required this.onTapLocateMe,
+    required this.onClearLocation,
   });
 
   final TextEditingController cemeteryNameController;
@@ -22,10 +27,17 @@ class RestingPlaceSection extends StatelessWidget {
   final InputDecoration Function({required String hint, dynamic prefixIcon})
       inputDecoration;
 
+  final double? latitude;
+  final double? longitude;
+  final VoidCallback onTapPickOnMap;
+  final VoidCallback onTapLocateMe;
+  final VoidCallback onClearLocation;
+
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
     final tt = context.textTheme;
+    final hasCoordinates = latitude != null && longitude != null;
 
     return Container(
       padding: EdgeInsets.all(16.r),
@@ -80,6 +92,207 @@ class RestingPlaceSection extends StatelessWidget {
               ),
             ],
           ),
+          SizedBox(height: 12.h),
+
+          // Exact GPS Coordinate Box
+          if (hasCoordinates)
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? cs.surfaceContainer
+                    : cs.primary.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(16.r),
+                border: Border.all(
+                  color: cs.primary.withValues(alpha: 0.25),
+                  width: 1.2,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: cs.primary.withValues(alpha: 0.06),
+                    blurRadius: 10,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16.r),
+                  onTap: onTapPickOnMap,
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 13.w, vertical: 11.h),
+                    child: Row(
+                      children: [
+                        // Left Pulsing Pin / Radar Icon
+                        Container(
+                          width: 38.r,
+                          height: 38.r,
+                          decoration: BoxDecoration(
+                            color: cs.primary.withValues(alpha: 0.12),
+                            borderRadius: BorderRadius.circular(12.r),
+                          ),
+                          child: Center(
+                            child: Icon(
+                              Icons.pin_drop_rounded,
+                              size: 21.sp,
+                              color: cs.primary,
+                            ),
+                          ),
+                        ),
+                        SizedBox(width: 11.w),
+
+                        // Coordinates & Status Label
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    width: 6.r,
+                                    height: 6.r,
+                                    decoration: BoxDecoration(
+                                      color: cs.primary,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  SizedBox(width: 5.w),
+                                  Text(
+                                    'GPS PINNED',
+                                    style: TextStyle(
+                                      fontSize: 9.5.sp,
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: 0.6,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 3.h),
+                              Text(
+                                '${latitude!.toStringAsFixed(6)}°,  ${longitude!.toStringAsFixed(6)}°',
+                                style: TextStyle(
+                                  fontSize: 12.5.sp,
+                                  fontWeight: FontWeight.w700,
+                                  color: cs.onSurface,
+                                  letterSpacing: -0.2,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 1.h),
+                              Text(
+                                'Tap to preview or adjust plot',
+                                style: TextStyle(
+                                  fontSize: 10.5.sp,
+                                  color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Action Buttons: Edit pill & Clear button
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.symmetric(
+                                  horizontal: 8.w, vertical: 5.h),
+                              decoration: BoxDecoration(
+                                color: cs.primary.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(8.r),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.edit_location_alt_rounded,
+                                    size: 13.sp,
+                                    color: cs.primary,
+                                  ),
+                                  SizedBox(width: 3.w),
+                                  Text(
+                                    'Adjust',
+                                    style: TextStyle(
+                                      fontSize: 11.sp,
+                                      fontWeight: FontWeight.w600,
+                                      color: cs.primary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            InkWell(
+                              borderRadius: BorderRadius.circular(14.r),
+                              onTap: onClearLocation,
+                              child: Padding(
+                                padding: EdgeInsets.all(5.r),
+                                child: Icon(
+                                  Icons.close_rounded,
+                                  size: 17.sp,
+                                  color: cs.onSurfaceVariant.withValues(alpha: 0.8),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      side: BorderSide(color: cs.primary.withValues(alpha: 0.4)),
+                    ),
+                    onPressed: onTapPickOnMap,
+                    icon: Icon(Icons.map_outlined, size: 18.sp, color: cs.primary),
+                    label: Text(
+                      'Pick on Map',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: cs.primary,
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8.w),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 10.h, horizontal: 8.w),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.r),
+                      ),
+                      side: BorderSide(color: cs.outlineVariant),
+                    ),
+                    onPressed: onTapLocateMe,
+                    icon: Icon(Icons.my_location, size: 18.sp, color: cs.onSurfaceVariant),
+                    label: Text(
+                      'Use GPS',
+                      style: TextStyle(
+                        fontSize: 12.sp,
+                        fontWeight: FontWeight.w600,
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+
           SizedBox(height: 14.h),
           GestureDetector(
             onTap: onTapGravePhoto,

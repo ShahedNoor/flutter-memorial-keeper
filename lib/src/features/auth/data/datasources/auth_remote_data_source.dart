@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/utils/utils.dart';
+import 'package:memorialkeeper/src/utils/utils.dart';
 
 /// Remote auth contract — hides AuthService / SDK details from repositories.
 abstract class AuthRemoteDataSource {

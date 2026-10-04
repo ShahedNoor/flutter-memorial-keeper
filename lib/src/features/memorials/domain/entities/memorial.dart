@@ -20,6 +20,7 @@ class Memorial extends Equatable {
     this.gravePlot,
     this.latitude,
     this.longitude,
+    this.mapStyle = 'streets',
     this.profilePhotoPath,
     this.gravePhotoPath,
     this.memoryPhotoPaths = const [],
@@ -49,6 +50,7 @@ class Memorial extends Equatable {
   final String? gravePlot;
   final double? latitude;
   final double? longitude;
+  final String mapStyle; // 'satellite' | 'streets'
 
   final String? profilePhotoPath;
   final String? gravePhotoPath;
@@ -138,6 +140,7 @@ class Memorial extends Equatable {
     String? gravePlot,
     double? latitude,
     double? longitude,
+    String? mapStyle,
     String? profilePhotoPath,
     String? gravePhotoPath,
     List<String>? memoryPhotoPaths,
@@ -165,6 +168,7 @@ class Memorial extends Equatable {
       gravePlot: gravePlot ?? this.gravePlot,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
+      mapStyle: mapStyle ?? this.mapStyle,
       profilePhotoPath: profilePhotoPath ?? this.profilePhotoPath,
       gravePhotoPath: gravePhotoPath ?? this.gravePhotoPath,
       memoryPhotoPaths: memoryPhotoPaths ?? this.memoryPhotoPaths,
@@ -195,6 +199,7 @@ class Memorial extends Equatable {
         gravePlot,
         latitude,
         longitude,
+        mapStyle,
         profilePhotoPath,
         gravePhotoPath,
         memoryPhotoPaths,

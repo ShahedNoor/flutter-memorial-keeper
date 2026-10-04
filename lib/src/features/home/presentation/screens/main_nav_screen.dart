@@ -1,10 +1,10 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
-import 'package:memorial_keeper/src/features/memorials/presentation/screens/memorial_directory_screen.dart';
-import 'package:memorial_keeper/src/features/memorials/presentation/screens/resting_places_screen.dart';
-import 'package:memorial_keeper/src/features/dua/presentation/screens/dua_library_screen.dart';
-import 'package:memorial_keeper/src/features/settings/presentation/screens/settings_screen.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/screens/memorial_directory_screen.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/screens/resting_places_screen.dart';
+import 'package:memorialkeeper/src/features/dua/presentation/screens/dua_library_screen.dart';
+import 'package:memorialkeeper/src/features/settings/presentation/screens/settings_screen.dart';
 
 /// Main navigation shell hosting persistent bottom navigation across features.
 class MainNavScreen extends StatefulWidget {

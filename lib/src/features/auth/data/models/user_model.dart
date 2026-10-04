@@ -1,4 +1,4 @@
-import 'package:memorial_keeper/src/features/auth/domain/entities/user.dart';
+import 'package:memorialkeeper/src/features/auth/domain/entities/user.dart';
 
 /// Data-layer user DTO. Maps to/from the domain [AppUser] entity.
 class UserModel {

@@ -1,5 +1,5 @@
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 /// Clean empty state placeholder for search and category filtering.
 class HomeEmptyState extends StatelessWidget {

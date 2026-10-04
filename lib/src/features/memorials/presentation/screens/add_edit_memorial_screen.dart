@@ -1,6 +1,6 @@
 import 'package:uuid/uuid.dart';
-import 'package:memorial_keeper/src/imports/core_imports.dart';
-import 'package:memorial_keeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/imports/core_imports.dart';
+import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../domain/entities/memorial.dart';
 import '../providers/memorial_bloc.dart';
 import '../widgets/widgets.dart';
@@ -42,6 +42,9 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
 
   String? _profilePhotoPath;
   String? _gravePhotoPath;
+  double? _latitude;
+  double? _longitude;
+  String _mapStyle = 'streets';
 
   bool get _isEditing => widget.existingMemorial != null;
 
@@ -99,6 +102,9 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
       _dateOfDeath = m.dateOfDeath;
       _profilePhotoPath = m.profilePhotoPath;
       _gravePhotoPath = m.gravePhotoPath;
+      _latitude = m.latitude;
+      _longitude = m.longitude;
+      _mapStyle = m.mapStyle;
       _isYearOnly = m.dateOfBirth == null && m.dateOfDeath == null;
     }
   }
@@ -131,6 +137,46 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
           _ageController.text = calculated.toString();
         }
       }
+    }
+  }
+
+  Future<void> _pickLocationOnMap() async {
+    final result = await showGraveMapPickerSheet(
+      context,
+      initialLat: _latitude,
+      initialLng: _longitude,
+      initialQuery: _cemeteryNameController.text.trim().isNotEmpty
+          ? _cemeteryNameController.text.trim()
+          : _cemeteryAreaController.text.trim(),
+      initialLayer: _mapStyle == 'satellite'
+          ? MapLayerType.satellite
+          : MapLayerType.streets,
+    );
+
+    if (result != null && mounted) {
+      setState(() {
+        _latitude = result.latitude;
+        _longitude = result.longitude;
+        _mapStyle = result.mapStyle;
+        if (_cemeteryNameController.text.trim().isEmpty &&
+            result.placeName != null) {
+          _cemeteryNameController.text = result.placeName!;
+        }
+      });
+    }
+  }
+
+  Future<void> _locateCurrentPosition() async {
+    final pos = await LocationService.instance.getCurrentLocation();
+    if (pos != null && mounted) {
+      setState(() {
+        _latitude = pos.latitude;
+        _longitude = pos.longitude;
+      });
+      showGlobalToast(
+        message: 'GPS coordinates recorded from current location',
+        status: 'success',
+      );
     }
   }
 
@@ -218,6 +264,9 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
       gravePlot: _gravePlotController.text.trim().isEmpty
           ? null
           : _gravePlotController.text.trim(),
+      latitude: _latitude,
+      longitude: _longitude,
+      mapStyle: _mapStyle,
       profilePhotoPath: _profilePhotoPath,
       gravePhotoPath: _gravePhotoPath,
       notesOrDua: _notesController.text.trim().isEmpty
@@ -525,6 +574,16 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
               cemeteryAreaController: _cemeteryAreaController,
               gravePlotController: _gravePlotController,
               gravePhotoPath: _gravePhotoPath,
+              latitude: _latitude,
+              longitude: _longitude,
+              onTapPickOnMap: _pickLocationOnMap,
+              onTapLocateMe: _locateCurrentPosition,
+              onClearLocation: () {
+                setState(() {
+                  _latitude = null;
+                  _longitude = null;
+                });
+              },
               onTapGravePhoto: () => _pickImage(isGravePhoto: true),
               inputDecoration: ({required String hint, dynamic prefixIcon}) =>
                   _inputDecoration(hint: hint, prefixIcon: prefixIcon),
