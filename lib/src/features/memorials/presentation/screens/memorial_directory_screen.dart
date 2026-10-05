@@ -46,6 +46,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
 
   @override
   Widget build(BuildContext context) {
+    final _ = context.locale;
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -58,7 +59,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
       backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(
-          'Memorial Directory',
+          'memorials.directory_title'.tr(),
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: cs.onSurface,
@@ -118,7 +119,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                         SizedBox(width: 6.w),
                         Flexible(
                           child: Text(
-                            'Family (${filteredFamily.length})',
+                            '${'memorials.tab_family'.tr()} (${filteredFamily.length})',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -141,7 +142,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                         SizedBox(width: 6.w),
                         Flexible(
                           child: Text(
-                            'Others & Friends (${filteredOthers.length})',
+                            '${'memorials.tab_others'.tr()} (${filteredOthers.length})',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -168,7 +169,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                 color: cs.onSurface,
               ),
               decoration: InputDecoration(
-                hintText: 'Search by name, role, or cemetery...',
+                hintText: 'memorials.search_placeholder'.tr(),
                 hintStyle: tt.bodyMedium?.copyWith(
                   color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
@@ -240,8 +241,8 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                 // 1. Family Tab
                 _buildMemorialListView(
                   memorials: filteredFamily,
-                  emptyMessage: 'No family records found',
-                  emptySubtitle: 'Add your close relatives and ancestors.',
+                  emptyMessage: 'memorials.no_family_title'.tr(),
+                  emptySubtitle: 'memorials.no_family_subtitle'.tr(),
                   cs: cs,
                   tt: tt,
                 ),
@@ -249,8 +250,8 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
                 // 2. Others & Acquaintances Tab
                 _buildMemorialListView(
                   memorials: filteredOthers,
-                  emptyMessage: 'No acquaintances or friends found',
-                  emptySubtitle: 'Add teachers, mentors, or dear friends.',
+                  emptyMessage: 'memorials.no_others_title'.tr(),
+                  emptySubtitle: 'memorials.no_others_subtitle'.tr(),
                   cs: cs,
                   tt: tt,
                 ),
@@ -276,7 +277,7 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
           size: 20.sp,
         ),
         label: Text(
-          _tabController.index == 0 ? 'Add Family Member' : 'Add Person Record',
+          'home.add_memorial'.tr(),
           style: TextStyle(fontSize: 13.sp, fontWeight: FontWeight.bold),
         ),
       ),

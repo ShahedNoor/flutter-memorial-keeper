@@ -57,7 +57,7 @@ class HomeHeader extends StatelessWidget {
           ),
           SizedBox(width: 8.w),
           Text(
-            'Memorial Keeper',
+            'home.home_title'.tr(),
             style: TextStyle(
               fontSize: 18.sp,
               fontWeight: FontWeight.w800,

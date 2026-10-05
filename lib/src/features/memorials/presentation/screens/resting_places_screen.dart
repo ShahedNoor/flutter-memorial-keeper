@@ -10,6 +10,7 @@ class RestingPlacesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final _ = context.locale;
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -35,7 +36,7 @@ class RestingPlacesScreen extends StatelessWidget {
       backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(
-          'Resting Places',
+          'places.title'.tr(),
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: cs.onSurface,
@@ -45,11 +46,10 @@ class RestingPlacesScreen extends StatelessWidget {
         backgroundColor: cs.surface,
       ),
       body: cemeteryList.isEmpty
-          ? const Center(
+          ? Center(
               child: HomeEmptyState(
-                message: 'No Resting Places Recorded Yet',
-                subtitle:
-                    'Add cemetery name, area, or plot details when adding or editing a memorial to see them mapped here.',
+                message: 'places.no_places_title'.tr(),
+                subtitle: 'places.no_places_desc'.tr(),
               ),
             )
           : ListView.builder(
@@ -128,7 +128,8 @@ class RestingPlacesScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(12.r),
                             ),
                             child: Text(
-                              '${residents.length} ${residents.length == 1 ? 'Resting' : 'Resting'}',
+                              'places.resting_badge'
+                                  .tr(args: [residents.length.toString()]),
                               style: TextStyle(
                                 fontSize: 11.sp,
                                 fontWeight: FontWeight.bold,
@@ -145,7 +146,7 @@ class RestingPlacesScreen extends StatelessWidget {
                       ),
                       SizedBox(height: 10.h),
                       Text(
-                        'Departed Loved Ones Here:',
+                        'places.departed_loved_ones_here'.tr(),
                         style: tt.bodySmall?.copyWith(
                           fontWeight: FontWeight.w600,
                           color: cs.onSurfaceVariant,

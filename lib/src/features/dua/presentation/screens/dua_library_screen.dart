@@ -34,11 +34,8 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
     final duaState = context.watch<DuaCubit>().state;
     final duas = duaState.filteredDuas;
 
-    // Determine current language: use active language in cubit, defaulting to locale
-    final localeLang = context.locale.languageCode;
-    final activeLanguage = duaState.activeLanguage.isNotEmpty
-        ? duaState.activeLanguage
-        : (localeLang == 'bn' ? 'bn' : 'en');
+    // Translation language strictly follows global app locale (en / bn)
+    final activeLanguage = context.locale.languageCode == 'bn' ? 'bn' : 'en';
 
     // Extract categories
     final allCategories = ['all'];
@@ -53,7 +50,7 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
       backgroundColor: cs.surface,
       appBar: AppBar(
         title: Text(
-          'Duas & Remembrance',
+          'duas.title'.tr(),
           style: tt.titleMedium?.copyWith(
             fontWeight: FontWeight.bold,
             color: cs.onSurface,
@@ -64,74 +61,21 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
         actions: [
           IconButton(
             icon: AppIcon(
-              icon: HugeIcons.strokeRoundedRefresh,
-              size: 20.sp,
+              icon: Icons.format_size_rounded,
+              size: 22.sp,
               color: cs.onSurfaceVariant,
             ),
-            tooltip: 'Sync from Cloud',
+            tooltip: 'duas.adjust_font_size'.tr(),
             onPressed: () {
               HapticFeedback.lightImpact();
-              context.read<DuaCubit>().loadDuas(forceRefresh: true);
-              showGlobalToast(
-                message: 'Checking cloud for new Duas...',
-                status: 'info',
-              );
+              DuaFontSizeSheet.show(context);
             },
           ),
         ],
       ),
       body: Column(
         children: [
-          // Top Control Bar: Language Switcher & Category Filter
-          Container(
-            padding: EdgeInsets.fromLTRB(20.w, 4.h, 20.w, 10.h),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Translation Language:',
-                  style: tt.labelMedium?.copyWith(
-                    color: cs.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Container(
-                  decoration: BoxDecoration(
-                    color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(12.r),
-                    border: Border.all(
-                      color: cs.outlineVariant.withValues(alpha: 0.6),
-                    ),
-                  ),
-                  padding: EdgeInsets.all(3.r),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _buildLangPill(
-                        label: 'English',
-                        code: 'en',
-                        isActive: activeLanguage == 'en',
-                        cs: cs,
-                        onTap: () {
-                          context.read<DuaCubit>().switchLanguage('en');
-                        },
-                      ),
-                      _buildLangPill(
-                        label: 'বাংলা',
-                        code: 'bn',
-                        isActive: activeLanguage == 'bn',
-                        cs: cs,
-                        onTap: () {
-                          context.read<DuaCubit>().switchLanguage('bn');
-                        },
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
+          SizedBox(height: 6.h),
           // Categories Bar
           if (allCategories.length > 2) ...[
             SizedBox(
@@ -144,9 +88,26 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
                 itemBuilder: (context, index) {
                   final cat = allCategories[index];
                   final isSelected = duaState.selectedCategory == cat;
-                  final label = cat == 'all'
-                      ? 'All'
-                      : cat[0].toUpperCase() + cat.substring(1);
+                  final String label;
+                  switch (cat) {
+                    case 'all':
+                      label = 'duas.all'.tr();
+                      break;
+                    case 'parents':
+                      label = 'duas.parents'.tr();
+                      break;
+                    case 'ziyarat':
+                      label = 'duas.ziyarat'.tr();
+                      break;
+                    case 'general':
+                      label = 'duas.general'.tr();
+                      break;
+                    case 'patience':
+                      label = 'duas.patience'.tr();
+                      break;
+                    default:
+                      label = cat[0].toUpperCase() + cat.substring(1);
+                  }
 
                   return InkWell(
                     onTap: () {
@@ -159,9 +120,7 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
                         vertical: 6.h,
                       ),
                       decoration: BoxDecoration(
-                        color: isSelected
-                            ? cs.primary
-                            : cs.surfaceContainerLow,
+                        color: isSelected ? cs.primary : cs.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(10.r),
                         border: Border.all(
                           color: isSelected
@@ -195,7 +154,7 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
               child: duas.isEmpty
                   ? Center(
                       child: Text(
-                        'No Duas found in this category',
+                        'duas.empty'.tr(),
                         style: tt.bodyMedium?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
@@ -215,34 +174,6 @@ class _DuaLibraryScreenState extends State<DuaLibraryScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLangPill({
-    required String label,
-    required String code,
-    required bool isActive,
-    required ColorScheme cs,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 5.h),
-        decoration: BoxDecoration(
-          color: isActive ? cs.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(9.r),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 12.sp,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
-            color: isActive ? Colors.white : cs.onSurfaceVariant,
-          ),
-        ),
       ),
     );
   }

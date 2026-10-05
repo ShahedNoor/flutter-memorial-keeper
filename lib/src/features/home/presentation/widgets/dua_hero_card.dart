@@ -18,9 +18,9 @@ class _DuaHeroCardState extends State<DuaHeroCard> {
   int _todayRecitations = 0;
 
   static const String _fallbackArabic =
-      'رَّبِّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا';
+      'رَّبِّ ارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا';
   static const String _fallbackTranslationEn =
-      'My Lord, have mercy upon them as they brought me up when I was small.';
+      'My Lord, have mercy upon them as they brought me up [when I was] small.';
   static const String _fallbackTranslationBn =
       'হে আমার প্রতিপালক! তাদের উভয়ের প্রতি দয়া কর যেমন তারা শৈশবে আমাকে লালন-পালন করেছিলেন।';
 
@@ -97,9 +97,8 @@ class _DuaHeroCardState extends State<DuaHeroCard> {
             ? _fallbackTranslationBn
             : _fallbackTranslationEn);
 
-    final String? reference = (dailyDua?.reference.isNotEmpty ?? false)
-        ? dailyDua!.reference
-        : null;
+    final String? reference =
+        (dailyDua?.reference.isNotEmpty ?? false) ? dailyDua!.reference : null;
 
     // Language-aware badge text
     final String badgeText = activeLanguage == 'bn'
@@ -107,9 +106,8 @@ class _DuaHeroCardState extends State<DuaHeroCard> {
         : '$_todayRecitations Recited Today';
 
     // Button label
-    final String buttonLabel = activeLanguage == 'bn'
-        ? 'দোয়া পাঠ করুন'
-        : 'Recite Dua';
+    final String buttonLabel =
+        activeLanguage == 'bn' ? 'দোয়া পাঠ করুন' : 'Recite Dua';
 
     return Container(
       decoration: BoxDecoration(
@@ -198,7 +196,7 @@ class _DuaHeroCardState extends State<DuaHeroCard> {
             textAlign: TextAlign.center,
             textDirection: TextDirection.rtl,
             style: TextStyle(
-              fontSize: 19.sp,
+              fontSize: duaState.arabicFontSize.sp,
               color: Colors.white,
               fontWeight: FontWeight.bold,
               height: 1.6,
@@ -212,7 +210,8 @@ class _DuaHeroCardState extends State<DuaHeroCard> {
             '"$translationText"',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.sp,
+              fontSize:
+                  (duaState.translationFontSize - 1.0).clamp(10.0, 18.0).sp,
               color: const Color(0xFFE2EBE7),
               fontStyle: FontStyle.italic,
               height: 1.4,
