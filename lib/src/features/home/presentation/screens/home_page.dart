@@ -78,7 +78,7 @@ class _HomePageState extends State<HomePage> {
                     color: cs.onSurface,
                   ),
                   decoration: InputDecoration(
-                    hintText: 'Search by name, relationship, or cemetery...',
+                    hintText: 'home.search_placeholder'.tr(),
                     hintStyle: tt.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant.withValues(alpha: 0.7),
                     ),
@@ -222,8 +222,8 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Text(
                       _isSearchActive
-                          ? 'Search Results'
-                          : 'Family Departed Records',
+                          ? 'home.search_results'.tr()
+                          : 'home.family_records'.tr(),
                       style: tt.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                         color: cs.onSurface,
@@ -238,8 +238,8 @@ class _HomePageState extends State<HomePage> {
                       ),
                       child: Text(
                         _isSearchActive
-                            ? '${filteredMemorials.length} Found'
-                            : '${filteredMemorials.length} Recorded',
+                            ? '${filteredMemorials.length} ${'home.records_found'.tr()}'
+                            : '${filteredMemorials.length} ${'home.records_recorded'.tr()}',
                         style: tt.labelSmall?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w700,

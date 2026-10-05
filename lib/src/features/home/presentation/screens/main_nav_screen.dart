@@ -27,41 +27,44 @@ class _MainNavScreenState extends State<MainNavScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final currentLocale = context.locale;
+
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: _screens,
       ),
       bottomNavigationBar: AppBottomNavBar(
+        key: ValueKey('nav_bar_${currentLocale.languageCode}'),
         currentIndex: _currentIndex,
         onTap: (index) {
           setState(() {
             _currentIndex = index;
           });
         },
-        items: const [
+        items: [
           AppBottomNavItem(
-            label: 'Home',
+            label: 'nav.home'.tr(context: context),
             icon: HugeIcons.strokeRoundedHome01,
             activeIcon: HugeIcons.strokeRoundedHome01,
           ),
           AppBottomNavItem(
-            label: 'Memorials',
+            label: 'nav.memorials'.tr(context: context),
             icon: HugeIcons.strokeRoundedUserGroup,
             activeIcon: HugeIcons.strokeRoundedUserGroup,
           ),
           AppBottomNavItem(
-            label: 'Places',
+            label: 'nav.places'.tr(context: context),
             icon: HugeIcons.strokeRoundedLocation01,
             activeIcon: HugeIcons.strokeRoundedLocation01,
           ),
           AppBottomNavItem(
-            label: 'Duas',
+            label: 'nav.duas'.tr(context: context),
             icon: HugeIcons.strokeRoundedMosque01,
             activeIcon: HugeIcons.strokeRoundedMosque01,
           ),
           AppBottomNavItem(
-            label: 'Settings',
+            label: 'nav.settings'.tr(context: context),
             icon: HugeIcons.strokeRoundedSettings01,
             activeIcon: HugeIcons.strokeRoundedSettings01,
           ),

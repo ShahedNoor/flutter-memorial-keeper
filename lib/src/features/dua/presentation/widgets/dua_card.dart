@@ -1,22 +1,48 @@
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../domain/entities/dua.dart';
+import '../providers/dua_cubit.dart';
 
 class DuaCard extends StatelessWidget {
   const DuaCard({
     super.key,
     required this.dua,
     required this.activeLanguage,
+    this.arabicFontSize,
+    this.translationFontSize,
   });
 
   final Dua dua;
   final String activeLanguage;
+  final double? arabicFontSize;
+  final double? translationFontSize;
+
+  String _categoryLabel(String cat) {
+    switch (cat.trim().toLowerCase()) {
+      case 'parents':
+        return 'duas.parents'.tr();
+      case 'ziyarat':
+        return 'duas.ziyarat'.tr();
+      case 'general':
+        return 'duas.general'.tr();
+      case 'patience':
+        return 'duas.patience'.tr();
+      default:
+        return cat.isNotEmpty ? cat[0].toUpperCase() + cat.substring(1) : cat;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final _ = context.locale;
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+
+    final duaState = context.watch<DuaCubit>().state;
+    final currentArabicSize = arabicFontSize ?? duaState.arabicFontSize;
+    final currentTranslationSize =
+        translationFontSize ?? duaState.translationFontSize;
 
     final title = dua.displayTitle(activeLanguage);
     final translation = dua.displayTranslation(activeLanguage);
@@ -58,7 +84,7 @@ class DuaCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8.r),
                 ),
                 child: Text(
-                  dua.category,
+                  _categoryLabel(dua.category),
                   style: tt.labelSmall?.copyWith(
                     color: cs.primary,
                     fontWeight: FontWeight.bold,
@@ -84,7 +110,7 @@ class DuaCard extends StatelessWidget {
               textAlign: TextAlign.center,
               textDirection: TextDirection.rtl,
               style: TextStyle(
-                fontSize: 18.5.sp,
+                fontSize: currentArabicSize.sp,
                 fontWeight: FontWeight.bold,
                 color: cs.onSurface,
                 height: 1.65,
@@ -100,7 +126,7 @@ class DuaCard extends StatelessWidget {
               style: tt.bodySmall?.copyWith(
                 color: cs.onSurfaceVariant.withValues(alpha: 0.8),
                 fontStyle: FontStyle.italic,
-                fontSize: 11.5.sp,
+                fontSize: (currentTranslationSize - 1).clamp(9, 18).sp,
                 height: 1.4,
               ),
             ),
@@ -133,7 +159,7 @@ class DuaCard extends StatelessWidget {
                   style: tt.bodySmall?.copyWith(
                     color: cs.onSurface,
                     height: 1.45,
-                    fontSize: 12.5.sp,
+                    fontSize: currentTranslationSize.sp,
                   ),
                 ),
               ),
@@ -160,15 +186,16 @@ class DuaCard extends StatelessWidget {
                       color: cs.onSurfaceVariant,
                       size: 18.sp,
                     ),
-                    tooltip: 'Copy Dua',
+                    tooltip: 'duas.copy_dua'.tr(),
                     onPressed: () {
                       Clipboard.setData(
                         ClipboardData(
-                          text: '${dua.arabic}\n\n$translation\n— ${dua.reference}',
+                          text:
+                              '${dua.arabic}\n\n$translation\n— ${dua.reference}',
                         ),
                       );
                       showGlobalToast(
-                        message: 'Dua copied to clipboard',
+                        message: 'duas.copied_toast'.tr(),
                         status: 'info',
                       );
                     },
@@ -179,11 +206,11 @@ class DuaCard extends StatelessWidget {
                       color: cs.primary,
                       size: 20.sp,
                     ),
-                    tooltip: 'Mark Recited',
+                    tooltip: 'duas.mark_recited'.tr(),
                     onPressed: () {
                       HapticFeedback.lightImpact();
                       showGlobalToast(
-                        message: 'Dua recited. May Allah accept.',
+                        message: 'duas.recited_toast'.tr(),
                         status: 'success',
                       );
                     },

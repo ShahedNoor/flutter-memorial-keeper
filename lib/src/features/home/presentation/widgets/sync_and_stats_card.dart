@@ -24,6 +24,8 @@ class SyncAndStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Access context.locale to ensure immediate rebuild on language change
+    final _ = context.locale;
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -67,14 +69,14 @@ class SyncAndStatsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Local Storage Protected',
+                            'home.sync_card_title'.tr(),
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: cs.onSurface,
                             ),
                           ),
                           Text(
-                            'Offline ready • Tap to manage cloud sync',
+                            'home.sync_card_subtitle'.tr(),
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                               fontSize: 11.sp,
@@ -103,7 +105,7 @@ class SyncAndStatsCard extends StatelessWidget {
                           ),
                           SizedBox(width: 4.w),
                           Text(
-                            'Active',
+                            'home.sync_card_active'.tr(),
                             style: TextStyle(
                               fontSize: 11.sp,
                               fontWeight: FontWeight.bold,
