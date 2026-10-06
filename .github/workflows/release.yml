@@ -52,6 +52,17 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Set up .env file
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+        run: |
+          if [ -z "$ENV_CONTENT" ]; then
+            echo "::error::GitHub Secret 'ENV_FILE' is missing or empty! Add it in Repository Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          echo "$ENV_CONTENT" > .env
+          echo "✓ Successfully configured .env from GitHub Secrets."
+
       - name: Build Android Release APK
         run: flutter build apk --release
 
