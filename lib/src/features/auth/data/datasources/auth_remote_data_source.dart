@@ -15,9 +15,18 @@ abstract class AuthRemoteDataSource {
     required String password,
   });
 
+  FutureEither<Map<String, dynamic>?> loginWithGoogle();
+
   FutureEither<void> forgotPassword({required String email});
 
   FutureEither<void> logout();
 
   FutureEither<Map<String, dynamic>?> getCurrentUser();
+
+  FutureEither<Map<String, dynamic>> updateProfile({
+    required String userId,
+    String? name,
+    String? photoUrl,
+    String? dateOfBirth,
+  });
 }

@@ -9,8 +9,9 @@ class LocalDatabaseService {
   static final LocalDatabaseService instance = LocalDatabaseService._();
 
   static const String _dbName = 'memorialkeeper.db';
-  static const int _dbVersion = 2;
+  static const int _dbVersion = 3;
   static const String tableMemorials = 'memorials';
+  static const String tableDeletedMemorials = 'deleted_memorials';
 
   Database? _database;
 
@@ -37,6 +38,14 @@ class LocalDatabaseService {
       await db.execute(
         'ALTER TABLE $tableMemorials ADD COLUMN mapStyle TEXT NOT NULL DEFAULT \'streets\'',
       );
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableDeletedMemorials (
+          id TEXT PRIMARY KEY,
+          deletedAt TEXT NOT NULL
+        )
+      ''');
     }
   }
 
@@ -72,6 +81,13 @@ class LocalDatabaseService {
       )
     ''');
 
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableDeletedMemorials (
+        id TEXT PRIMARY KEY,
+        deletedAt TEXT NOT NULL
+      )
+    ''');
+
     // Pre-populate with initial seed memorials so the app is instantly rich with data
     await _seedInitialMemorials(db);
   }
@@ -100,7 +116,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'A deeply pious elder who built the village madrasa. May Allah grant him Jannatul Firdaus.',
+        'notesOrDua':
+            'A deeply pious elder who built the village madrasa. May Allah grant him Jannatul Firdaus.',
         'isFavorite': 1,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -125,7 +142,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'Gentle soul who always recited the Quran at dawn. Remember her in your daily prayers.',
+        'notesOrDua':
+            'Gentle soul who always recited the Quran at dawn. Remember her in your daily prayers.',
         'isFavorite': 1,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -150,7 +168,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'Loving father and guide. Always emphasized honesty, compassion, and prayer.',
+        'notesOrDua':
+            'Loving father and guide. Always emphasized honesty, compassion, and prayer.',
         'isFavorite': 1,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -175,7 +194,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'A mother whose warmth was a sanctuary for our family. O Allah, make her grave a garden of paradise.',
+        'notesOrDua':
+            'A mother whose warmth was a sanctuary for our family. O Allah, make her grave a garden of paradise.',
         'isFavorite': 1,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -200,7 +220,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'Inspiring academic and humanitarian. Left an indelible mark on generations of students.',
+        'notesOrDua':
+            'Inspiring academic and humanitarian. Left an indelible mark on generations of students.',
         'isFavorite': 0,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -225,7 +246,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'True friend who stood by through thick and thin. May Allah reunite us in Jannah.',
+        'notesOrDua':
+            'True friend who stood by through thick and thin. May Allah reunite us in Jannah.',
         'isFavorite': 0,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -250,7 +272,8 @@ class LocalDatabaseService {
         'profilePhotoPath': null,
         'gravePhotoPath': null,
         'memoryPhotoPaths': jsonEncode([]),
-        'notesOrDua': 'Led prayers for over 40 years. Known for his soft-spoken wisdom and generosity.',
+        'notesOrDua':
+            'Led prayers for over 40 years. Known for his soft-spoken wisdom and generosity.',
         'isFavorite': 0,
         'syncStatus': 'synced',
         'createdAt': now,
@@ -267,7 +290,11 @@ class LocalDatabaseService {
 
   Future<int> insertMemorial(Map<String, dynamic> data) async {
     final db = await database;
-    return await db.insert(tableMemorials, data);
+    return await db.insert(
+      tableMemorials,
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   Future<int> updateMemorial(String id, Map<String, dynamic> data) async {
@@ -282,8 +309,59 @@ class LocalDatabaseService {
 
   Future<int> deleteMemorial(String id) async {
     final db = await database;
+    // Record tombstone before deleting from memorials table
+    await db.insert(
+      tableDeletedMemorials,
+      {
+        'id': id,
+        'deletedAt': DateTime.now().toIso8601String(),
+      },
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
     return await db.delete(
       tableMemorials,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<String>> getDeletedMemorialIds() async {
+    final db = await database;
+    final rows = await db.query(tableDeletedMemorials);
+    return rows.map((r) => r['id'].toString()).toList();
+  }
+
+  Future<void> clearDeletedMemorial(String id) async {
+    final db = await database;
+    await db.delete(
+      tableDeletedMemorials,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  Future<List<Map<String, dynamic>>> getAllMemorialsRaw() async {
+    final db = await database;
+    return await db.query(
+      tableMemorials,
+      orderBy: 'isFavorite DESC, createdAt DESC',
+    );
+  }
+
+  Future<void> upsertMemorial(Map<String, dynamic> data) async {
+    final db = await database;
+    await db.insert(
+      tableMemorials,
+      data,
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
+  }
+
+  Future<void> markMemorialSynced(String id) async {
+    final db = await database;
+    await db.update(
+      tableMemorials,
+      {'syncStatus': 'synced'},
       where: 'id = ?',
       whereArgs: [id],
     );
@@ -349,6 +427,7 @@ class LocalDatabaseService {
       tableMemorials,
       {
         'isFavorite': newFav,
+        'syncStatus': 'pending_update',
         'updatedAt': DateTime.now().toIso8601String(),
       },
       where: 'id = ?',

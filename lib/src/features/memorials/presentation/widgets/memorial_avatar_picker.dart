@@ -39,7 +39,9 @@ class MemorialAvatarPicker extends StatelessWidget {
                     ),
                     image: photoPath != null
                         ? DecorationImage(
-                            image: FileImage(File(photoPath!)),
+                            image: photoPath!.startsWith('http')
+                                ? CachedNetworkImageProvider(photoPath!) as ImageProvider
+                                : FileImage(File(photoPath!)),
                             fit: BoxFit.cover,
                           )
                         : null,

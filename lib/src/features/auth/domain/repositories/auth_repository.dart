@@ -18,6 +18,9 @@ abstract class AuthRepository {
     required String password,
   });
 
+  /// Sign in with Google
+  FutureEither<AppUser> loginWithGoogle();
+
   /// Send a password reset email
   FutureEither<void> forgotPassword({
     required String email,
@@ -28,5 +31,13 @@ abstract class AuthRepository {
 
   /// Check if the user is currently authenticated natively
   FutureEither<AppUser?> checkAuthState();
+
+  /// Update user profile details (name, photo, date of birth)
+  FutureEither<AppUser> updateProfile({
+    required String userId,
+    String? name,
+    String? photoUrl,
+    String? dateOfBirth,
+  });
 }
 

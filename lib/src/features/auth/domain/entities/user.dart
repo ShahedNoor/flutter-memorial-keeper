@@ -7,14 +7,32 @@ class AppUser extends Equatable {
     required this.email,
     this.name,
     this.photoUrl,
+    this.dateOfBirth,
   });
 
   final String id;
   final String email;
   final String? name;
   final String? photoUrl;
+  final String? dateOfBirth;
 
   factory AppUser.empty() => const AppUser(id: '', email: '');
+
+  AppUser copyWith({
+    String? id,
+    String? email,
+    String? name,
+    String? photoUrl,
+    String? dateOfBirth,
+  }) {
+    return AppUser(
+      id: id ?? this.id,
+      email: email ?? this.email,
+      name: name ?? this.name,
+      photoUrl: photoUrl ?? this.photoUrl,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+    );
+  }
 
   /// Null-safe JSON factory with map pattern matching.
   factory AppUser.fromJson(Map<String, dynamic> json) {
@@ -28,6 +46,7 @@ class AppUser extends Equatable {
           email: email?.toString() ?? '',
           name: json['name']?.toString(),
           photoUrl: json['photoUrl']?.toString(),
+          dateOfBirth: json['dateOfBirth']?.toString(),
         ),
       _ => AppUser.empty(),
     };
@@ -38,11 +57,12 @@ class AppUser extends Equatable {
         'email': email,
         'name': name,
         'photoUrl': photoUrl,
+        'dateOfBirth': dateOfBirth,
       };
 
   bool get isEmpty => id.isEmpty;
   bool get isNotEmpty => id.isNotEmpty;
 
   @override
-  List<Object?> get props => [id, email, name, photoUrl];
+  List<Object?> get props => [id, email, name, photoUrl, dateOfBirth];
 }

@@ -12,7 +12,12 @@
           "package_name": "com.shahednoor.memorialkeeper"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "1081913766740-1obhmdj6svbmq3uutps664tpr8m58esa.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCGNHjNfN0yKhXK4lLr_7iJlAFULTL6QCM"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1081913766740-1obhmdj6svbmq3uutps664tpr8m58esa.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

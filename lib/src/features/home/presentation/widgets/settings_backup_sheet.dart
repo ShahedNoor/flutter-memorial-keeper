@@ -2,6 +2,8 @@ import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 import 'package:memorialkeeper/src/features/auth/presentation/providers/session_bloc.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/widgets/auth_bottom_sheet.dart';
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
 
 /// Modal bottom sheet for app settings, data export, and optional cloud backup.
 class SettingsBackupSheet extends StatelessWidget {
@@ -25,6 +27,7 @@ class SettingsBackupSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final session = context.read<SessionBloc>().state;
     final user = session.userOrNull;
+    final memorialState = context.watch<MemorialBloc>().state;
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
@@ -167,10 +170,57 @@ class SettingsBackupSheet extends StatelessWidget {
                     variant: ButtonVariant.primary,
                     onPressed: () {
                       Navigator.pop(context);
-                      context.pushNamed(AppRoutes.login);
+                      AuthBottomSheet.show(context);
                     },
                   ),
                   SizedBox(height: 8.h),
+                ] else ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: AppIcon(
+                      icon: HugeIcons.strokeRoundedCloudSync,
+                      color: cs.primary,
+                    ),
+                    title: Text(
+                      'Sync with Cloud',
+                      style: tt.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: Text(
+                      memorialState.isSyncing
+                          ? 'Syncing local and Firebase data...'
+                          : 'Reconcile local & Firebase memorials',
+                      style: tt.bodySmall,
+                    ),
+                    trailing: memorialState.isSyncing
+                        ? SizedBox(
+                            width: 20.r,
+                            height: 20.r,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          )
+                        : AppIcon(
+                            icon: HugeIcons.strokeRoundedArrowRight01,
+                            size: 18.sp,
+                          ),
+                    onTap: memorialState.isSyncing
+                        ? null
+                        : () {
+                            context.read<MemorialBloc>().add(
+                                  SyncMemorialsEvent(
+                                    userId: user.id,
+                                    isManual: true,
+                                  ),
+                                );
+                            Navigator.pop(context);
+                            showGlobalToast(
+                              message: 'Synchronizing with cloud...',
+                              status: 'info',
+                            );
+                          },
+                  ),
+                  const Divider(),
                 ],
                 ListTile(
                   contentPadding: EdgeInsets.zero,

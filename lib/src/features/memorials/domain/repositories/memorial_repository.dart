@@ -22,4 +22,7 @@ abstract class MemorialRepository {
 
   /// Toggle favorite status of a memorial
   FutureEither<void> toggleFavorite(String id);
+
+  /// Synchronize memorials between local SQLite and remote Firestore
+  FutureEither<dynamic> syncMemorials({String? userId});
 }

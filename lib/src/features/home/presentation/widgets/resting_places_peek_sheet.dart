@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../../memorials/domain/entities/memorial.dart';
@@ -283,34 +282,39 @@ class RestingPlacesPeekSheet extends StatelessWidget {
                 Navigator.of(context).pop();
                 context.push(AppRoutes.memorialDetail, extra: m);
               },
-              leading: Container(
-                width: 32.r,
-                height: 32.r,
-                decoration: BoxDecoration(
-                  color: cs.surfaceContainerHighest,
-                  shape: BoxShape.circle,
-                  image: m.profilePhotoPath != null &&
-                          File(m.profilePhotoPath!).existsSync()
-                      ? DecorationImage(
-                          image: FileImage(File(m.profilePhotoPath!)),
-                          fit: BoxFit.cover,
-                        )
-                      : null,
-                ),
-                child: m.profilePhotoPath == null
-                    ? Center(
-                        child: Text(
-                          m.fullName.isNotEmpty
-                              ? m.fullName.characters.first.toUpperCase()
-                              : '?',
-                          style: TextStyle(
-                            fontSize: 14.sp,
-                            fontWeight: FontWeight.bold,
-                            color: cs.primary,
-                          ),
-                        ),
-                      )
-                    : null,
+              leading: Builder(
+                builder: (context) {
+                  final imageProvider =
+                      AppImageHelper.resolveImageProvider(m.profilePhotoPath);
+                  return Container(
+                    width: 32.r,
+                    height: 32.r,
+                    decoration: BoxDecoration(
+                      color: cs.surfaceContainerHighest,
+                      shape: BoxShape.circle,
+                      image: imageProvider != null
+                          ? DecorationImage(
+                              image: imageProvider,
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: imageProvider == null
+                        ? Center(
+                            child: Text(
+                              m.fullName.isNotEmpty
+                                  ? m.fullName.characters.first.toUpperCase()
+                                  : '?',
+                              style: TextStyle(
+                                fontSize: 14.sp,
+                                fontWeight: FontWeight.bold,
+                                color: cs.primary,
+                              ),
+                            ),
+                          )
+                        : null,
+                  );
+                },
               ),
               title: Text(
                 m.fullName,

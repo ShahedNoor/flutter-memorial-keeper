@@ -101,10 +101,9 @@ class AppButton extends StatelessWidget {
       duration: AppDurations.fast,
       switchInCurve: AppCurves.decelerate,
       child: isLoading
-          ? SizedBox(
+          ? SizedBox.square(
+              dimension: 20.r,
               key: const ValueKey('loader'),
-              width: 20.w,
-              height: 20.h,
               child: useCupertino
                   ? CupertinoActivityIndicator(color: fg)
                   : CircularProgressIndicator(strokeWidth: 2, color: fg),

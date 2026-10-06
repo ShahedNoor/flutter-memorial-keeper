@@ -18,21 +18,6 @@ class MediaService {
     int? imageQuality,
   }) async {
     return runTask(() async {
-      // Check permissions
-      if (source == ImageSource.camera) {
-        final status = await Permission.camera.request();
-        if (!status.isGranted) {
-          throw Exception('Camera permission denied');
-        }
-      } else {
-        if (Platform.isAndroid || Platform.isIOS) {
-          final status = await Permission.photos.request();
-          if (!status.isGranted && !status.isLimited) {
-            throw Exception('Photos permission denied');
-          }
-        }
-      }
-
       final XFile? file = await _imagePicker.pickImage(
         source: source,
         maxWidth: maxWidth,
