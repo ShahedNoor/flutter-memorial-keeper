@@ -8,38 +8,48 @@ sealed class AuthEvent {
 
 final class LoginRequested extends AuthEvent {
   const LoginRequested({
-    required this.context,
+    this.context,
     required this.email,
     required this.password,
   });
 
-  final BuildContext context;
+  final BuildContext? context;
   final String email;
   final String password;
 }
 
 final class SignUpRequested extends AuthEvent {
   const SignUpRequested({
-    required this.context,
+    this.context,
     required this.name,
     required this.email,
     required this.password,
   });
 
-  final BuildContext context;
+  final BuildContext? context;
   final String name;
   final String email;
   final String password;
 }
 
+final class GoogleSignInRequested extends AuthEvent {
+  const GoogleSignInRequested({this.context});
+
+  final BuildContext? context;
+}
+
 final class ForgotPasswordRequested extends AuthEvent {
   const ForgotPasswordRequested({
-    required this.context,
+    this.context,
     required this.email,
   });
 
-  final BuildContext context;
+  final BuildContext? context;
   final String email;
+}
+
+final class AuthResetRequested extends AuthEvent {
+  const AuthResetRequested();
 }
 
 sealed class AuthState {
@@ -71,10 +81,19 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         super(const AuthInitial()) {
     on<LoginRequested>(_onLoginRequested);
     on<SignUpRequested>(_onSignUpRequested);
+    on<GoogleSignInRequested>(_onGoogleSignInRequested);
     on<ForgotPasswordRequested>(_onForgotPasswordRequested);
+    on<AuthResetRequested>(_onResetRequested);
   }
 
   final AuthRepository _repository;
+
+  void _onResetRequested(
+    AuthResetRequested event,
+    Emitter<AuthState> emit,
+  ) {
+    emit(const AuthInitial());
+  }
 
   Future<void> _onLoginRequested(
     LoginRequested event,
@@ -88,14 +107,16 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         emit(AuthFailure(failure));
-        if (event.context.mounted) {
-          showToast(event.context, message: failure.message, status: 'error');
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: failure.message, status: 'error');
         }
       },
       (_) {
         emit(const AuthSuccess());
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.home);
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: 'Signed in successfully', status: 'success');
         }
       },
     );
@@ -116,14 +137,47 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         emit(AuthFailure(failure));
-        if (event.context.mounted) {
-          showToast(event.context, message: failure.message, status: 'error');
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: failure.message, status: 'error');
         }
       },
       (_) {
         emit(const AuthSuccess());
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.home);
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: 'Account created successfully', status: 'success');
+        }
+      },
+    );
+  }
+
+  Future<void> _onGoogleSignInRequested(
+    GoogleSignInRequested event,
+    Emitter<AuthState> emit,
+  ) async {
+    emit(const AuthLoading());
+
+    final result = await _repository.loginWithGoogle();
+
+    result.fold(
+      (failure) {
+        // If user just cancelled the popup, don't scream error toast
+        if (failure.message.contains('cancelled')) {
+          emit(const AuthInitial());
+          return;
+        }
+        emit(AuthFailure(failure));
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: failure.message, status: 'error');
+        }
+      },
+      (_) {
+        emit(const AuthSuccess());
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: 'Signed in with Google', status: 'success');
         }
       },
     );
@@ -140,21 +194,20 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     result.fold(
       (failure) {
         emit(AuthFailure(failure));
-        if (event.context.mounted) {
-          showToast(event.context, message: failure.message, status: 'error');
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
+          showToast(ctx, message: failure.message, status: 'error');
         }
       },
       (_) {
         emit(const AuthSuccess());
-        if (event.context.mounted) {
+        final ctx = event.context;
+        if (ctx != null && ctx.mounted) {
           showToast(
-            event.context,
+            ctx,
             message: 'Password reset link sent successfully',
             status: 'success',
           );
-        }
-        if (event.context.mounted) {
-          event.context.go(AppRoutes.login);
         }
       },
     );

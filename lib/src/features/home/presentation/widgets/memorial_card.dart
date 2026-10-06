@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import 'package:memorialkeeper/src/features/memorials/domain/entities/memorial.dart';
@@ -48,8 +47,8 @@ class MemorialCard extends StatelessWidget {
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
 
-    final hasPhoto = memorial.profilePhotoPath != null &&
-        File(memorial.profilePhotoPath!).existsSync();
+    final imageProvider =
+        AppImageHelper.resolveImageProvider(memorial.profilePhotoPath);
 
     return Container(
       margin: EdgeInsets.only(bottom: 12.h),
@@ -86,20 +85,17 @@ class MemorialCard extends StatelessWidget {
                         color: cs.primary.withValues(alpha: 0.3),
                         width: 1.5,
                       ),
-                      image: hasPhoto
+                      image: imageProvider != null
                           ? DecorationImage(
-                              image:
-                                  FileImage(File(memorial.profilePhotoPath!)),
+                              image: imageProvider,
                               fit: BoxFit.cover,
                             )
                           : null,
                     ),
-                    child: !hasPhoto
+                    child: imageProvider == null
                         ? Center(
                             child: AppIcon(
-                              icon: memorial.gender == 'female'
-                                  ? HugeIcons.strokeRoundedUser
-                                  : HugeIcons.strokeRoundedUser,
+                              icon: HugeIcons.strokeRoundedUser,
                               color: cs.primary,
                               size: 26.sp,
                             ),

@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../../../../imports/core_imports.dart';
 
 /// Shows a full-screen interactive zoomable image dialog with responsive dismissal.
@@ -24,10 +25,21 @@ void showFullscreenImage(BuildContext context, String path, String title) {
             ),
           ),
           InteractiveViewer(
-            child: Image.file(
-              File(path),
-              fit: BoxFit.contain,
-            ),
+            child: path.startsWith('http')
+                ? CachedNetworkImage(
+                    imageUrl: path,
+                    fit: BoxFit.contain,
+                    placeholder: (_, __) => const Center(
+                      child: CircularProgressIndicator(),
+                    ),
+                    errorWidget: (_, __, ___) => const Center(
+                      child: Icon(Icons.broken_image, color: Colors.white, size: 48),
+                    ),
+                  )
+                : Image.file(
+                    File(path),
+                    fit: BoxFit.contain,
+                  ),
           ),
           // Large, responsive close button
           Positioned(

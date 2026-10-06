@@ -7,12 +7,14 @@ class UserModel {
     required this.email,
     this.name,
     this.photoUrl,
+    this.dateOfBirth,
   });
 
   final String id;
   final String email;
   final String? name;
   final String? photoUrl;
+  final String? dateOfBirth;
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     final source = json['user'] is Map<String, dynamic>
@@ -29,6 +31,7 @@ class UserModel {
           email: email?.toString() ?? '',
           name: source['name']?.toString(),
           photoUrl: source['photoUrl']?.toString(),
+          dateOfBirth: source['dateOfBirth']?.toString(),
         ),
       _ => const UserModel(id: '', email: ''),
     };
@@ -39,6 +42,7 @@ class UserModel {
         email: user.email,
         name: user.name,
         photoUrl: user.photoUrl,
+        dateOfBirth: user.dateOfBirth,
       );
 
   AppUser toEntity() => AppUser(
@@ -46,6 +50,7 @@ class UserModel {
         email: email,
         name: name,
         photoUrl: photoUrl,
+        dateOfBirth: dateOfBirth,
       );
 
   Map<String, Object?> toJson() => {
@@ -53,5 +58,6 @@ class UserModel {
         'email': email,
         'name': name,
         'photoUrl': photoUrl,
+        'dateOfBirth': dateOfBirth,
       };
 }

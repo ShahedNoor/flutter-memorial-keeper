@@ -23,6 +23,7 @@ class AuthRepositoryImpl implements AuthRepository {
       email: entity.email.isEmpty ? (fallbackEmail ?? '') : entity.email,
       name: entity.name ?? fallbackName,
       photoUrl: entity.photoUrl,
+      dateOfBirth: entity.dateOfBirth,
     );
   }
 
@@ -71,6 +72,18 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  FutureEither<AppUser> loginWithGoogle() async {
+    final result = await _remoteDataSource.loginWithGoogle();
+
+    return result.flatMap((userData) {
+      if (userData == null) {
+        return left(const ServerFailure('Google sign-in was cancelled'));
+      }
+      return right(_toUser(userData));
+    });
+  }
+
+  @override
   FutureEither<void> forgotPassword({required String email}) {
     return _remoteDataSource.forgotPassword(email: email);
   }
@@ -88,5 +101,22 @@ class AuthRepositoryImpl implements AuthRepository {
       if (userData == null) return null;
       return _toUser(userData);
     });
+  }
+
+  @override
+  FutureEither<AppUser> updateProfile({
+    required String userId,
+    String? name,
+    String? photoUrl,
+    String? dateOfBirth,
+  }) async {
+    final result = await _remoteDataSource.updateProfile(
+      userId: userId,
+      name: name,
+      photoUrl: photoUrl,
+      dateOfBirth: dateOfBirth,
+    );
+
+    return result.map(_toUser);
   }
 }

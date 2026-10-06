@@ -6,6 +6,7 @@ import '../../domain/usecases/add_memorial_usecase.dart';
 import '../../domain/usecases/update_memorial_usecase.dart';
 import '../../domain/usecases/delete_memorial_usecase.dart';
 import '../../domain/usecases/toggle_favorite_usecase.dart';
+import '../../domain/usecases/sync_memorials_usecase.dart';
 
 // --- Events ---
 
@@ -68,6 +69,15 @@ class SearchQueryChanged extends MemorialEvent {
   List<Object?> get props => [query];
 }
 
+class SyncMemorialsEvent extends MemorialEvent {
+  const SyncMemorialsEvent({this.userId, this.isManual = false});
+  final String? userId;
+  final bool isManual;
+
+  @override
+  List<Object?> get props => [userId, isManual];
+}
+
 // --- States ---
 
 class MemorialState extends Equatable {
@@ -76,6 +86,7 @@ class MemorialState extends Equatable {
     this.selectedCategory = 'all',
     this.searchQuery = '',
     this.isLoading = false,
+    this.isSyncing = false,
     this.errorMessage,
     this.actionSuccessMessage,
   });
@@ -84,6 +95,7 @@ class MemorialState extends Equatable {
   final String selectedCategory;
   final String searchQuery;
   final bool isLoading;
+  final bool isSyncing;
   final String? errorMessage;
   final String? actionSuccessMessage;
 
@@ -120,6 +132,7 @@ class MemorialState extends Equatable {
     String? selectedCategory,
     String? searchQuery,
     bool? isLoading,
+    bool? isSyncing,
     String? errorMessage,
     String? actionSuccessMessage,
     bool clearActionSuccess = false,
@@ -130,6 +143,7 @@ class MemorialState extends Equatable {
       selectedCategory: selectedCategory ?? this.selectedCategory,
       searchQuery: searchQuery ?? this.searchQuery,
       isLoading: isLoading ?? this.isLoading,
+      isSyncing: isSyncing ?? this.isSyncing,
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       actionSuccessMessage: clearActionSuccess
           ? null
@@ -143,6 +157,7 @@ class MemorialState extends Equatable {
         selectedCategory,
         searchQuery,
         isLoading,
+        isSyncing,
         errorMessage,
         actionSuccessMessage,
       ];
@@ -157,11 +172,13 @@ class MemorialBloc extends Bloc<MemorialEvent, MemorialState> {
     required UpdateMemorialUseCase updateMemorialUseCase,
     required DeleteMemorialUseCase deleteMemorialUseCase,
     required ToggleFavoriteUseCase toggleFavoriteUseCase,
+    required SyncMemorialsUseCase syncMemorialsUseCase,
   })  : _getMemorialsUseCase = getMemorialsUseCase,
         _addMemorialUseCase = addMemorialUseCase,
         _updateMemorialUseCase = updateMemorialUseCase,
         _deleteMemorialUseCase = deleteMemorialUseCase,
         _toggleFavoriteUseCase = toggleFavoriteUseCase,
+        _syncMemorialsUseCase = syncMemorialsUseCase,
         super(const MemorialState(isLoading: true)) {
     on<LoadMemorials>(_onLoadMemorials);
     on<AddMemorialEvent>(_onAddMemorial);
@@ -170,6 +187,7 @@ class MemorialBloc extends Bloc<MemorialEvent, MemorialState> {
     on<ToggleFavoriteEvent>(_onToggleFavorite);
     on<CategoryFilterChanged>(_onCategoryFilterChanged);
     on<SearchQueryChanged>(_onSearchQueryChanged);
+    on<SyncMemorialsEvent>(_onSyncMemorials);
   }
 
   final GetMemorialsUseCase _getMemorialsUseCase;
@@ -177,6 +195,7 @@ class MemorialBloc extends Bloc<MemorialEvent, MemorialState> {
   final UpdateMemorialUseCase _updateMemorialUseCase;
   final DeleteMemorialUseCase _deleteMemorialUseCase;
   final ToggleFavoriteUseCase _toggleFavoriteUseCase;
+  final SyncMemorialsUseCase _syncMemorialsUseCase;
 
   Future<void> _onLoadMemorials(
     LoadMemorials event,
@@ -294,5 +313,40 @@ class MemorialBloc extends Bloc<MemorialEvent, MemorialState> {
     Emitter<MemorialState> emit,
   ) {
     emit(state.copyWith(searchQuery: event.query));
+  }
+
+  Future<void> _onSyncMemorials(
+    SyncMemorialsEvent event,
+    Emitter<MemorialState> emit,
+  ) async {
+    emit(state.copyWith(isSyncing: true, clearError: true));
+
+    final result = await _syncMemorialsUseCase(event.userId);
+
+    await result.fold(
+      (failure) async {
+        emit(state.copyWith(
+          isSyncing: false,
+          errorMessage: event.isManual ? failure.message : null,
+        ));
+      },
+      (syncResult) async {
+        // Reload fresh memorial data from SQLite
+        final loadResult = await _getMemorialsUseCase((
+          category: null,
+          searchQuery: null,
+        ));
+
+        loadResult.fold(
+          (_) => emit(state.copyWith(isSyncing: false)),
+          (memorials) => emit(state.copyWith(
+            isSyncing: false,
+            memorials: memorials,
+            actionSuccessMessage:
+                event.isManual ? 'Cloud & Local sync completed' : null,
+          )),
+        );
+      },
+    );
   }
 }

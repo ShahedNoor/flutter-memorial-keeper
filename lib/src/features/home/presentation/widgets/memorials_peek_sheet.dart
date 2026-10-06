@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import '../../../memorials/domain/entities/memorial.dart';
@@ -198,8 +197,9 @@ class _MemorialsPeekSheetState extends State<MemorialsPeekSheet> {
                         itemCount: filtered.length,
                         itemBuilder: (context, index) {
                           final m = filtered[index];
-                          final hasPhoto = m.profilePhotoPath != null &&
-                              File(m.profilePhotoPath!).existsSync();
+                          final imageProvider =
+                              AppImageHelper.resolveImageProvider(
+                                  m.profilePhotoPath);
 
                           return Padding(
                             padding: EdgeInsets.only(bottom: 8.h),
@@ -227,15 +227,14 @@ class _MemorialsPeekSheetState extends State<MemorialsPeekSheet> {
                                         decoration: BoxDecoration(
                                           color: cs.surfaceContainerHighest,
                                           shape: BoxShape.circle,
-                                          image: hasPhoto
+                                          image: imageProvider != null
                                               ? DecorationImage(
-                                                  image: FileImage(
-                                                      File(m.profilePhotoPath!)),
+                                                  image: imageProvider,
                                                   fit: BoxFit.cover,
                                                 )
                                               : null,
                                         ),
-                                        child: !hasPhoto
+                                        child: imageProvider == null
                                             ? Center(
                                                 child: Text(
                                                   m.fullName.isNotEmpty

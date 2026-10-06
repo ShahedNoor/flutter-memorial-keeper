@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:flutter/rendering.dart';
@@ -133,6 +134,20 @@ class _MemorialProfileScreenState extends State<MemorialProfileScreen> {
     );
 
     if (confirmed && mounted) {
+      if (memorial.profilePhotoPath != null) {
+        unawaited(
+          R2StorageService.instance.deleteObject(memorial.profilePhotoPath!),
+        );
+      }
+      if (memorial.gravePhotoPath != null) {
+        unawaited(
+          R2StorageService.instance.deleteObject(memorial.gravePhotoPath!),
+        );
+      }
+      for (final p in memorial.memoryPhotoPaths) {
+        unawaited(R2StorageService.instance.deleteObject(p));
+      }
+
       context.read<MemorialBloc>().add(DeleteMemorialEvent(memorial.id));
       showGlobalToast(
         message: 'Deleted record for ${memorial.fullName}',

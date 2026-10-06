@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../../imports/core_imports.dart';
 import '../../../domain/entities/memorial.dart';
@@ -25,8 +26,8 @@ class MemorialProfileAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = context.colors;
-    final hasGravePhoto = memorial.gravePhotoPath != null &&
-        File(memorial.gravePhotoPath!).existsSync();
+    final hasGravePhoto =
+        AppImageHelper.hasValidImage(memorial.gravePhotoPath);
 
     return SliverAppBar(
       expandedHeight: 200.h,
@@ -161,10 +162,16 @@ class MemorialProfileAppBar extends StatelessWidget {
           fit: StackFit.expand,
           children: [
             if (hasGravePhoto)
-              Image.file(
-                File(memorial.gravePhotoPath!),
-                fit: BoxFit.cover,
-              )
+              if (memorial.gravePhotoPath!.startsWith('http'))
+                CachedNetworkImage(
+                  imageUrl: memorial.gravePhotoPath!,
+                  fit: BoxFit.cover,
+                )
+              else
+                Image.file(
+                  File(memorial.gravePhotoPath!),
+                  fit: BoxFit.cover,
+                )
             else
               DecoratedBox(
                 decoration: const BoxDecoration(

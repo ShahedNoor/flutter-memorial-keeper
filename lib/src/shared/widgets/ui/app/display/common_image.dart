@@ -1,3 +1,4 @@
+import 'dart:io';
 import '../../../../../imports/imports.dart';
 
 
@@ -47,6 +48,16 @@ class CommonImage extends StatelessWidget {
       );
     } else if (imageUrl.endsWith('.svg')) {
       image = const Icon(Icons.broken_image, color: Colors.grey);
+    } else if (File(imageUrl).existsSync()) {
+      image = Image.file(
+        File(imageUrl),
+        width: adjustedWidth,
+        height: adjustedHeight,
+        fit: fit,
+        color: color,
+        errorBuilder: (context, error, stackTrace) =>
+            errorWidget ?? _buildDefaultErrorWidget(),
+      );
     } else {
       image = Image.asset(
         imageUrl,

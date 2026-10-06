@@ -308,7 +308,9 @@ class RestingPlaceSection extends StatelessWidget {
                 ),
                 image: gravePhotoPath != null
                     ? DecorationImage(
-                        image: FileImage(File(gravePhotoPath!)),
+                        image: gravePhotoPath!.startsWith('http')
+                            ? CachedNetworkImageProvider(gravePhotoPath!) as ImageProvider
+                            : FileImage(File(gravePhotoPath!)),
                         fit: BoxFit.cover,
                       )
                     : null,

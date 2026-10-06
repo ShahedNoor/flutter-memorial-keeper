@@ -1,6 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import '../../../../shared/helpers/image_helper.dart';
 import '../../domain/entities/memorial.dart';
 import 'share_privacy_sheet.dart';
 
@@ -26,8 +28,8 @@ class MemorialShareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = memorial.profilePhotoPath != null &&
-        File(memorial.profilePhotoPath!).existsSync();
+    final hasPhoto =
+        AppImageHelper.hasValidImage(memorial.profilePhotoPath);
 
     final birthStr = memorial.dateOfBirth != null
         ? _formatDate(memorial.dateOfBirth)
@@ -148,12 +150,19 @@ class MemorialShareCard extends StatelessWidget {
               ),
               child: ClipOval(
                 child: hasPhoto
-                    ? Image.file(
-                        File(memorial.profilePhotoPath!),
-                        fit: BoxFit.cover,
-                        width: 108.r,
-                        height: 108.r,
-                      )
+                    ? (memorial.profilePhotoPath!.startsWith('http')
+                        ? CachedNetworkImage(
+                            imageUrl: memorial.profilePhotoPath!,
+                            fit: BoxFit.cover,
+                            width: 108.r,
+                            height: 108.r,
+                          )
+                        : Image.file(
+                            File(memorial.profilePhotoPath!),
+                            fit: BoxFit.cover,
+                            width: 108.r,
+                            height: 108.r,
+                          ))
                     : ColoredBox(
                         color: const Color(0xFF163E30),
                         child: Center(

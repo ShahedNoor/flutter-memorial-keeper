@@ -3,12 +3,14 @@ import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 import 'package:memorialkeeper/src/features/auth/presentation/providers/auth_bloc.dart';
 
+import 'package:memorialkeeper/src/features/auth/presentation/widgets/google_logo.dart';
+
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
 
   @override
   State<SignupScreen> createState() => _SignupScreenState();
-  }
+}
 
 class _SignupScreenState extends State<SignupScreen> {
   final _formKey = GlobalKey<FormState>();
@@ -18,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
   final _confirmPasswordController = TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isGoogleLoading = false;
 
   @override
   void dispose() {
@@ -38,36 +41,52 @@ class _SignupScreenState extends State<SignupScreen> {
     Future<void> handleSignup() async {
       if (!(_formKey.currentState?.validate() ?? false)) return;
 
-
       context.read<AuthBloc>().add(
             SignUpRequested(
-          context: context, 
-              name: _nameController.text,
-          email: _emailController.text, 
+              context: context,
+              name: _nameController.text.trim(),
+              email: _emailController.text.trim(),
               password: _passwordController.text,
-          ),
+            ),
           );
     }
 
-    return _SignupView(
-      formKey: _formKey,
-      nameController: _nameController,
-      emailController: _emailController,
-      passwordController: _passwordController,
-      confirmPasswordController: _confirmPasswordController,
-      obscurePassword: _obscurePassword,
-      obscureConfirmPassword: _obscureConfirmPassword,
-      isLoading: isLoading,
-      onToggleObscure: () =>
-          setState(() => _obscurePassword = !_obscurePassword),
-      onToggleConfirmObscure: () =>
-          setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
-      onSignup: handleSignup,
-      cs: cs,
-      tt: tt,
+    void handleGoogleLogin() {
+      setState(() => _isGoogleLoading = true);
+      context.read<AuthBloc>().add(GoogleSignInRequested(context: context));
+    }
+
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is! AuthLoading) {
+          setState(() => _isGoogleLoading = false);
+        }
+        if (state is AuthSuccess) {
+          context.go(AppRoutes.home);
+        }
+      },
+      child: _SignupView(
+        formKey: _formKey,
+        nameController: _nameController,
+        emailController: _emailController,
+        passwordController: _passwordController,
+        confirmPasswordController: _confirmPasswordController,
+        obscurePassword: _obscurePassword,
+        obscureConfirmPassword: _obscureConfirmPassword,
+        isLoading: isLoading || _isGoogleLoading,
+        isGoogleLoading: _isGoogleLoading,
+        onToggleObscure: () =>
+            setState(() => _obscurePassword = !_obscurePassword),
+        onToggleConfirmObscure: () =>
+            setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
+        onSignup: handleSignup,
+        onGoogleLogin: handleGoogleLogin,
+        cs: cs,
+        tt: tt,
+      ),
     );
   }
-  }
+}
 
 class _SignupView extends StatelessWidget {
   const _SignupView({
@@ -79,9 +98,11 @@ class _SignupView extends StatelessWidget {
     required this.obscurePassword,
     required this.obscureConfirmPassword,
     required this.isLoading,
+    required this.isGoogleLoading,
     required this.onToggleObscure,
     required this.onToggleConfirmObscure,
     required this.onSignup,
+    required this.onGoogleLogin,
     required this.cs,
     required this.tt,
   });
@@ -94,9 +115,11 @@ class _SignupView extends StatelessWidget {
   final bool obscurePassword;
   final bool obscureConfirmPassword;
   final bool isLoading;
+  final bool isGoogleLoading;
   final VoidCallback onToggleObscure;
   final VoidCallback onToggleConfirmObscure;
   final VoidCallback onSignup;
+  final VoidCallback onGoogleLogin;
   final ColorScheme cs;
   final TextTheme tt;
 
@@ -122,13 +145,83 @@ class _SignupView extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
                 ),
-                SizedBox(height: AppSpacing.xxxl.h),
+                SizedBox(height: AppSpacing.xl.h),
+
+                // Google Sign In Button
+                InkWell(
+                  onTap: isLoading ? null : onGoogleLogin,
+                  borderRadius: BorderRadius.circular(14.r),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(vertical: 13.h),
+                    decoration: BoxDecoration(
+                      color: cs.surface,
+                      borderRadius: BorderRadius.circular(14.r),
+                      border: Border.all(
+                        color: cs.outlineVariant,
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.03),
+                          blurRadius: 6,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (isGoogleLoading)
+                          SizedBox(
+                            width: 20.r,
+                            height: 20.r,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: cs.primary,
+                            ),
+                          )
+                        else
+                          const GoogleLogo(size: 20),
+                        SizedBox(width: 12.w),
+                        Text(
+                          'auth.continue_with_google'.tr(),
+                          style: tt.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                SizedBox(height: AppSpacing.lg.h),
+
+                // Divider ("or continue with email")
+                Row(
+                  children: [
+                    Expanded(child: Divider(color: cs.outlineVariant)),
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 12.w),
+                      child: Text(
+                        'auth.or_continue_with_email'.tr(),
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Expanded(child: Divider(color: cs.outlineVariant)),
+                  ],
+                ),
+
+                SizedBox(height: AppSpacing.lg.h),
+
                 Form(
                   key: formKey,
                   child: Column(
                     children: [
-                      AppTextField
-(
+                      AppTextField(
                         controller: nameController,
                         enabled: !isLoading,
                         label: 'auth.name'.tr(),
@@ -141,8 +234,7 @@ class _SignupView extends StatelessWidget {
                         },
                       ),
                       SizedBox(height: AppSpacing.md.h),
-                      AppTextField
-(
+                      AppTextField(
                         controller: emailController,
                         enabled: !isLoading,
                         label: 'auth.email'.tr(),
@@ -158,8 +250,7 @@ class _SignupView extends StatelessWidget {
                         },
                       ),
                       SizedBox(height: AppSpacing.md.h),
-                      AppTextField
-(
+                      AppTextField(
                         controller: passwordController,
                         enabled: !isLoading,
                         label: 'auth.password'.tr(),
@@ -170,7 +261,7 @@ class _SignupView extends StatelessWidget {
                               ? Icons.visibility_off
                               : Icons.visibility),
                           onPressed: onToggleObscure,
-                          ),
+                        ),
                         validator: (v) {
                           if (AppUtils.isBlank(v)) {
                             return 'auth.password_required'.tr();
@@ -182,8 +273,7 @@ class _SignupView extends StatelessWidget {
                         },
                       ),
                       SizedBox(height: AppSpacing.md.h),
-                      AppTextField
-(
+                      AppTextField(
                         controller: confirmPasswordController,
                         enabled: !isLoading,
                         label: 'auth.confirm_password'.tr(),
@@ -194,7 +284,7 @@ class _SignupView extends StatelessWidget {
                               ? Icons.visibility_off
                               : Icons.visibility),
                           onPressed: onToggleConfirmObscure,
-                          ),
+                        ),
                         validator: (v) {
                           if (AppUtils.isBlank(v)) {
                             return 'auth.confirm_password_required'.tr();
@@ -206,8 +296,7 @@ class _SignupView extends StatelessWidget {
                         },
                       ),
                       SizedBox(height: AppSpacing.lg.h),
-                      AppButton
-(
+                      AppButton(
                         label: 'Sign Up',
                         isLoading: isLoading,
                         onPressed: isLoading ? null : onSignup,
@@ -215,7 +304,7 @@ class _SignupView extends StatelessWidget {
                         isFullWidth: false,
                       ),
                     ],
-                    ),
+                  ),
                 ),
                 SizedBox(height: AppSpacing.xxxl.h),
                 InkWell(
@@ -234,17 +323,17 @@ class _SignupView extends StatelessWidget {
                             color: cs.primary,
                             fontWeight: FontWeight.bold,
                           ),
-                          ),
+                        ),
                       ],
                     ),
-                    ),
+                  ),
                 ),
                 SizedBox(height: AppSpacing.xl.h),
               ],
+            ),
           ),
-          ),
-          ),
+        ),
       ),
     );
   }
-  }
+}

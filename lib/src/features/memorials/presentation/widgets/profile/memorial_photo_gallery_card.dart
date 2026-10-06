@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../../imports/core_imports.dart';
 import '../../../domain/entities/memorial.dart';
@@ -25,7 +26,7 @@ class MemorialPhotoGalleryCard extends StatelessWidget {
       if (p == memorial.gravePhotoPath || p == memorial.profilePhotoPath) {
         return false;
       }
-      return File(p).existsSync();
+      return p.startsWith('http') || File(p).existsSync();
     }).toList();
 
     if (memoryPhotos.isEmpty) return const SizedBox.shrink();
@@ -89,12 +90,19 @@ class MemorialPhotoGalleryCard extends StatelessWidget {
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(12.r),
-                      child: Image.file(
-                        File(photoPath),
-                        width: 100.h,
-                        height: 100.h,
-                        fit: BoxFit.cover,
-                      ),
+                      child: photoPath.startsWith('http')
+                          ? CachedNetworkImage(
+                              imageUrl: photoPath,
+                              width: 100.h,
+                              height: 100.h,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(photoPath),
+                              width: 100.h,
+                              height: 100.h,
+                              fit: BoxFit.cover,
+                            ),
                     ),
                   );
                 },

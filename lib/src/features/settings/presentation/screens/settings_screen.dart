@@ -1,8 +1,13 @@
+import 'dart:io';
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
 import '../../../auth/presentation/providers/session_bloc.dart';
+import '../../../auth/domain/entities/user.dart';
 import '../../../dua/presentation/providers/dua_cubit.dart';
+
+import '../../../auth/presentation/widgets/auth_bottom_sheet.dart';
+import '../../../auth/presentation/widgets/user_profile_sheet.dart';
 
 /// Complete Settings screen for managing backups, theme, language, and account.
 class SettingsScreen extends StatelessWidget {
@@ -33,60 +38,83 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
         children: [
-          // Account Status Card
-          Container(
-            padding: EdgeInsets.all(16.r),
-            decoration: BoxDecoration(
-              color: cs.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(18.r),
-              border: Border.all(color: cs.outlineVariant),
-            ),
-            child: Row(
-              children: [
-                Container(
-                  width: 50.r,
-                  height: 50.r,
-                  decoration: BoxDecoration(
-                    color: user != null ? cs.primary : cs.primaryContainer,
-                    shape: BoxShape.circle,
+          // Account Status Card (Tappable to view/edit profile or sign in)
+          InkWell(
+            onTap: user != null
+                ? () => UserProfileSheet.show(context, user)
+                : () => AuthBottomSheet.show(context),
+            borderRadius: BorderRadius.circular(18.r),
+            child: Container(
+              padding: EdgeInsets.all(16.r),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(18.r),
+                border: Border.all(color: cs.outlineVariant),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    width: 52.r,
+                    height: 52.r,
+                    decoration: BoxDecoration(
+                      color: user != null ? cs.primary : cs.primaryContainer,
+                      shape: BoxShape.circle,
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: _buildAvatar(user, cs),
                   ),
-                  child: Center(
-                    child: AppIcon(
-                      icon: user != null
-                          ? HugeIcons.strokeRoundedUserCheck01
-                          : HugeIcons.strokeRoundedUser,
-                      color: user != null ? Colors.white : cs.primary,
-                      size: 24.sp,
+                  SizedBox(width: 14.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          user != null
+                              ? ((user.name != null && user.name!.isNotEmpty)
+                                  ? user.name!
+                                  : user.email)
+                              : 'settings.guest_title'.tr(),
+                          style: tt.titleSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: cs.onSurface,
+                          ),
+                        ),
+                        SizedBox(height: 3.h),
+                        Text(
+                          user != null
+                              ? (user.email.isNotEmpty
+                                  ? user.email
+                                  : 'settings.cloud_title'.tr())
+                              : 'settings.guest_desc'.tr(),
+                          style: tt.bodySmall?.copyWith(
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        if (user != null &&
+                            user.dateOfBirth != null &&
+                            user.dateOfBirth!.isNotEmpty) ...[
+                          SizedBox(height: 3.h),
+                          Row(
+                            children: [
+                              Icon(Icons.cake_outlined,
+                                  size: 13.sp, color: cs.primary),
+                              SizedBox(width: 4.w),
+                              Text(
+                                user.dateOfBirth!,
+                                style: tt.bodySmall?.copyWith(
+                                  color: cs.primary,
+                                  fontSize: 11.sp,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ],
                     ),
                   ),
-                ),
-                SizedBox(width: 14.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        user != null
-                            ? (user.name ?? user.email)
-                            : 'settings.guest_title'.tr(),
-                        style: tt.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: cs.onSurface,
-                        ),
-                      ),
-                      SizedBox(height: 3.h),
-                      Text(
-                        user != null
-                            ? 'settings.cloud_title'.tr()
-                            : 'settings.guest_desc'.tr(),
-                        style: tt.bodySmall?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
           SizedBox(height: 12.h),
@@ -94,7 +122,41 @@ class SettingsScreen extends StatelessWidget {
             AppButton(
               label: 'settings.sign_in_btn'.tr(),
               variant: ButtonVariant.primary,
-              onPressed: () => context.pushNamed(AppRoutes.login),
+              onPressed: () => AuthBottomSheet.show(context),
+            ),
+            SizedBox(height: 16.h),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: AppButton(
+                    label: 'auth.edit_profile'.tr(),
+                    variant: ButtonVariant.primary,
+                    height: ButtonSize.medium,
+                    isFullWidth: true,
+                    prefixIcon: const Icon(Icons.edit_outlined, size: 18),
+                    onPressed: () => UserProfileSheet.show(context, user),
+                  ),
+                ),
+                SizedBox(width: 12.w),
+                Expanded(
+                  child: AppButton(
+                    label: 'Sign Out',
+                    variant: ButtonVariant.outline,
+                    height: ButtonSize.medium,
+                    isFullWidth: true,
+                    onPressed: () {
+                      context
+                          .read<SessionBloc>()
+                          .add(const SessionLogoutRequested());
+                      showGlobalToast(
+                        message: 'Signed out successfully',
+                        status: 'info',
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 16.h),
           ],
@@ -370,6 +432,57 @@ class SettingsScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAvatar(AppUser? user, ColorScheme cs) {
+    if (user == null) {
+      return Center(
+        child: AppIcon(
+          icon: HugeIcons.strokeRoundedUser,
+          color: cs.primary,
+          size: 24.sp,
+        ),
+      );
+    }
+
+    if (user.photoUrl != null && user.photoUrl!.isNotEmpty) {
+      if (user.photoUrl!.startsWith('http')) {
+        return CachedNetworkImage(
+          imageUrl: user.photoUrl!,
+          fit: BoxFit.cover,
+          placeholder: (_, __) => Center(
+            child: AppIcon(
+              icon: HugeIcons.strokeRoundedUserCheck01,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ),
+          errorWidget: (_, __, ___) => Center(
+            child: AppIcon(
+              icon: HugeIcons.strokeRoundedUserCheck01,
+              color: Colors.white,
+              size: 24.sp,
+            ),
+          ),
+        );
+      } else {
+        final localFile = File(user.photoUrl!);
+        if (localFile.existsSync()) {
+          return Image.file(
+            localFile,
+            fit: BoxFit.cover,
+          );
+        }
+      }
+    }
+
+    return Center(
+      child: AppIcon(
+        icon: HugeIcons.strokeRoundedUserCheck01,
+        color: Colors.white,
+        size: 24.sp,
       ),
     );
   }

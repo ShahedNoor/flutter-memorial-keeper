@@ -27,6 +27,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       _authService.signUp(name: name, email: email, password: password);
 
   @override
+  FutureEither<Map<String, dynamic>?> loginWithGoogle() =>
+      _authService.loginWithGoogle();
+
+  @override
   FutureEither<void> forgotPassword({required String email}) =>
       _authService.forgotPassword(email: email);
 
@@ -36,4 +40,18 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   @override
   FutureEither<Map<String, dynamic>?> getCurrentUser() =>
       _authService.getCurrentUser();
+
+  @override
+  FutureEither<Map<String, dynamic>> updateProfile({
+    required String userId,
+    String? name,
+    String? photoUrl,
+    String? dateOfBirth,
+  }) =>
+      _authService.updateProfile(
+        userId: userId,
+        name: name,
+        photoUrl: photoUrl,
+        dateOfBirth: dateOfBirth,
+      );
 }

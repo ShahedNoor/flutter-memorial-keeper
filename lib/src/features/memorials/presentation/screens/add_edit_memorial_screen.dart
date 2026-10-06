@@ -1,6 +1,10 @@
+import 'dart:async';
+import 'dart:io';
 import 'package:uuid/uuid.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
+import 'package:memorialkeeper/src/features/auth/presentation/providers/session_bloc.dart';
 import '../../domain/entities/memorial.dart';
 import '../providers/memorial_bloc.dart';
 import '../widgets/widgets.dart';
@@ -20,6 +24,7 @@ class AddEditMemorialScreen extends StatefulWidget {
 
 class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
   final _formKey = GlobalKey<FormState>();
+  bool _isSaving = false;
 
   late TextEditingController _nameController;
   late TextEditingController _arabicNameController;
@@ -218,79 +223,174 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
     }
   }
 
-  void _save() {
-    if (!_formKey.currentState!.validate()) return;
+  Future<void> _save() async {
+    if (!_formKey.currentState!.validate() || _isSaving) return;
 
-    final now = DateTime.now();
-    final id = widget.existingMemorial?.id ?? const Uuid().v4();
+    setState(() => _isSaving = true);
 
-    int? bYear = int.tryParse(_birthYearController.text);
-    int? pYear = int.tryParse(_passingYearController.text);
-    int? ageVal;
+    try {
+      final now = DateTime.now();
+      final id = widget.existingMemorial?.id ?? const Uuid().v4();
+      final userId = context.read<SessionBloc>().state.userOrNull?.id ??
+          FirebaseAuth.instance.currentUser?.uid ??
+          'anonymous';
 
-    if (!_isYearOnly) {
-      if (_dateOfBirth != null) bYear = _dateOfBirth!.year;
-      if (_dateOfDeath != null) pYear = _dateOfDeath!.year;
-      ageVal = int.tryParse(_ageController.text);
-    } else {
-      if (bYear != null && pYear != null && pYear >= bYear) {
-        ageVal = pYear - bYear;
+      String? finalProfilePhotoPath = _profilePhotoPath;
+      if (finalProfilePhotoPath != null &&
+          !finalProfilePhotoPath.startsWith('http') &&
+          File(finalProfilePhotoPath).existsSync()) {
+        final res = await R2StorageService.instance.uploadMemorialPhoto(
+          userId: userId,
+          memorialId: id,
+          file: File(finalProfilePhotoPath),
+          isGrave: false,
+        );
+        res.fold(
+          (failure) {
+            AppLogger.warning(
+              'Profile photo R2 upload failed: ${failure.message}',
+            );
+          },
+          (uploaded) {
+            if (widget.existingMemorial?.profilePhotoPath != null &&
+                widget.existingMemorial!.profilePhotoPath!.startsWith('http') &&
+                widget.existingMemorial!.profilePhotoPath !=
+                    uploaded.publicUrl) {
+              unawaited(
+                R2StorageService.instance.deleteObject(
+                  widget.existingMemorial!.profilePhotoPath!,
+                ),
+              );
+            }
+            finalProfilePhotoPath = uploaded.publicUrl;
+          },
+        );
+      } else if (finalProfilePhotoPath == null &&
+          widget.existingMemorial?.profilePhotoPath != null &&
+          widget.existingMemorial!.profilePhotoPath!.startsWith('http')) {
+        unawaited(
+          R2StorageService.instance.deleteObject(
+            widget.existingMemorial!.profilePhotoPath!,
+          ),
+        );
+      }
+
+      String? finalGravePhotoPath = _gravePhotoPath;
+      if (finalGravePhotoPath != null &&
+          !finalGravePhotoPath.startsWith('http') &&
+          File(finalGravePhotoPath).existsSync()) {
+        final res = await R2StorageService.instance.uploadMemorialPhoto(
+          userId: userId,
+          memorialId: id,
+          file: File(finalGravePhotoPath),
+          isGrave: true,
+        );
+        res.fold(
+          (failure) {
+            AppLogger.warning(
+              'Grave photo R2 upload failed: ${failure.message}',
+            );
+          },
+          (uploaded) {
+            if (widget.existingMemorial?.gravePhotoPath != null &&
+                widget.existingMemorial!.gravePhotoPath!.startsWith('http') &&
+                widget.existingMemorial!.gravePhotoPath != uploaded.publicUrl) {
+              unawaited(
+                R2StorageService.instance.deleteObject(
+                  widget.existingMemorial!.gravePhotoPath!,
+                ),
+              );
+            }
+            finalGravePhotoPath = uploaded.publicUrl;
+          },
+        );
+      } else if (finalGravePhotoPath == null &&
+          widget.existingMemorial?.gravePhotoPath != null &&
+          widget.existingMemorial!.gravePhotoPath!.startsWith('http')) {
+        unawaited(
+          R2StorageService.instance.deleteObject(
+            widget.existingMemorial!.gravePhotoPath!,
+          ),
+        );
+      }
+
+      int? bYear = int.tryParse(_birthYearController.text);
+      int? pYear = int.tryParse(_passingYearController.text);
+      int? ageVal;
+
+      if (!_isYearOnly) {
+        if (_dateOfBirth != null) bYear = _dateOfBirth!.year;
+        if (_dateOfDeath != null) pYear = _dateOfDeath!.year;
+        ageVal = int.tryParse(_ageController.text);
+      } else {
+        if (bYear != null && pYear != null && pYear >= bYear) {
+          ageVal = pYear - bYear;
+        }
+      }
+
+      final memorial = Memorial(
+        id: id,
+        fullName: _nameController.text.trim(),
+        arabicName: _arabicNameController.text.trim().isEmpty
+            ? null
+            : _arabicNameController.text.trim(),
+        gender: _gender,
+        category: _category,
+        relationship: _relationship,
+        customRelation: _customRelationController.text.trim().isEmpty
+            ? null
+            : _customRelationController.text.trim(),
+        dateOfBirth: _isYearOnly ? null : _dateOfBirth,
+        birthYear: bYear,
+        dateOfDeath: _isYearOnly ? null : _dateOfDeath,
+        passingYear: pYear,
+        age: ageVal,
+        cemeteryName: _cemeteryNameController.text.trim().isEmpty
+            ? null
+            : _cemeteryNameController.text.trim(),
+        cemeteryArea: _cemeteryAreaController.text.trim().isEmpty
+            ? null
+            : _cemeteryAreaController.text.trim(),
+        gravePlot: _gravePlotController.text.trim().isEmpty
+            ? null
+            : _gravePlotController.text.trim(),
+        latitude: _latitude,
+        longitude: _longitude,
+        mapStyle: _mapStyle,
+        profilePhotoPath: finalProfilePhotoPath,
+        gravePhotoPath: finalGravePhotoPath,
+        notesOrDua: _notesController.text.trim().isEmpty
+            ? null
+            : _notesController.text.trim(),
+        isFavorite: widget.existingMemorial?.isFavorite ?? false,
+        syncStatus: widget.existingMemorial != null
+            ? 'pending_update'
+            : 'pending_create',
+        createdAt: widget.existingMemorial?.createdAt ?? now,
+        updatedAt: now,
+      );
+
+      if (!mounted) return;
+
+      if (_isEditing) {
+        context.read<MemorialBloc>().add(UpdateMemorialEvent(memorial));
+      } else {
+        context.read<MemorialBloc>().add(AddMemorialEvent(memorial));
+      }
+
+      showGlobalToast(
+        message: _isEditing ? 'Record updated' : 'Record added successfully',
+        status: 'success',
+      );
+
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isSaving = false);
       }
     }
-
-    final memorial = Memorial(
-      id: id,
-      fullName: _nameController.text.trim(),
-      arabicName: _arabicNameController.text.trim().isEmpty
-          ? null
-          : _arabicNameController.text.trim(),
-      gender: _gender,
-      category: _category,
-      relationship: _relationship,
-      customRelation: _customRelationController.text.trim().isEmpty
-          ? null
-          : _customRelationController.text.trim(),
-      dateOfBirth: _isYearOnly ? null : _dateOfBirth,
-      birthYear: bYear,
-      dateOfDeath: _isYearOnly ? null : _dateOfDeath,
-      passingYear: pYear,
-      age: ageVal,
-      cemeteryName: _cemeteryNameController.text.trim().isEmpty
-          ? null
-          : _cemeteryNameController.text.trim(),
-      cemeteryArea: _cemeteryAreaController.text.trim().isEmpty
-          ? null
-          : _cemeteryAreaController.text.trim(),
-      gravePlot: _gravePlotController.text.trim().isEmpty
-          ? null
-          : _gravePlotController.text.trim(),
-      latitude: _latitude,
-      longitude: _longitude,
-      mapStyle: _mapStyle,
-      profilePhotoPath: _profilePhotoPath,
-      gravePhotoPath: _gravePhotoPath,
-      notesOrDua: _notesController.text.trim().isEmpty
-          ? null
-          : _notesController.text.trim(),
-      isFavorite: widget.existingMemorial?.isFavorite ?? false,
-      syncStatus:
-          widget.existingMemorial != null ? 'pending_update' : 'pending_create',
-      createdAt: widget.existingMemorial?.createdAt ?? now,
-      updatedAt: now,
-    );
-
-    if (_isEditing) {
-      context.read<MemorialBloc>().add(UpdateMemorialEvent(memorial));
-    } else {
-      context.read<MemorialBloc>().add(AddMemorialEvent(memorial));
-    }
-
-    showGlobalToast(
-      message: _isEditing ? 'Record updated' : 'Record added successfully',
-      status: 'success',
-    );
-
-    Navigator.of(context).pop();
   }
 
   Future<void> _onDelete() async {
@@ -300,6 +400,17 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
     );
 
     if (confirmed && mounted) {
+      final m = widget.existingMemorial!;
+      if (m.profilePhotoPath != null) {
+        unawaited(R2StorageService.instance.deleteObject(m.profilePhotoPath!));
+      }
+      if (m.gravePhotoPath != null) {
+        unawaited(R2StorageService.instance.deleteObject(m.gravePhotoPath!));
+      }
+      for (final p in m.memoryPhotoPaths) {
+        unawaited(R2StorageService.instance.deleteObject(p));
+      }
+
       context
           .read<MemorialBloc>()
           .add(DeleteMemorialEvent(widget.existingMemorial!.id));
@@ -617,14 +728,23 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
                 ),
                 elevation: 2,
               ),
-              onPressed: _save,
-              child: Text(
-                _isEditing ? 'Save Changes' : 'Preserve Memorial Record',
-                style: tt.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
+              onPressed: _isSaving ? null : _save,
+              child: _isSaving
+                  ? SizedBox(
+                      width: 22.r,
+                      height: 22.r,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2.2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(
+                      _isEditing ? 'Save Changes' : 'Preserve Memorial Record',
+                      style: tt.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
             ),
             SizedBox(height: 40.h),
           ],

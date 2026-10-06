@@ -84,13 +84,17 @@ dependencies:
   latlong2: ^0.10.1
   geolocator: ^14.0.1
   share_plus: ^12.0.2
+  google_sign_in: 7.2.0
+
+  # Encryption & Crypto
+  crypto: ^3.0.6
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-  # Code Generation
+# Code Generation
 
 dependency_overrides:
 
@@ -102,5 +106,5 @@ flutter:
     # - assets/images/
     - assets/icons/
     - assets/translations/
-    # - .env
+    - .env
 

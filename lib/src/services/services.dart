@@ -11,4 +11,5 @@ export 'media_service.dart';
 export 'device_info_service.dart';
 export 'version_update_service.dart';
 export 'location_service.dart';
+export 'r2_storage_service.dart';
 

@@ -1,6 +1,7 @@
 import 'package:memorialkeeper/src/imports/core_imports.dart';
 import 'package:memorialkeeper/src/imports/packages_imports.dart';
 
+import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
 import 'settings_backup_sheet.dart';
 
 /// Kahf DNS-style status pill & statistics summary card.
@@ -29,6 +30,7 @@ class SyncAndStatsCard extends StatelessWidget {
     final theme = context.theme;
     final cs = theme.colorScheme;
     final tt = theme.textTheme;
+    final isSyncing = context.select<MemorialBloc, bool>((b) => b.state.isSyncing);
 
     return DecoratedBox(
       decoration: BoxDecoration(
@@ -57,7 +59,9 @@ class SyncAndStatsCard extends StatelessWidget {
                       ),
                       child: Center(
                         child: AppIcon(
-                          icon: HugeIcons.strokeRoundedSecurityCheck,
+                          icon: isSyncing
+                              ? HugeIcons.strokeRoundedCloudSync
+                              : HugeIcons.strokeRoundedSecurityCheck,
                           size: 16.sp,
                           color: cs.primary,
                         ),
@@ -69,14 +73,18 @@ class SyncAndStatsCard extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'home.sync_card_title'.tr(),
+                            isSyncing
+                                ? 'Synchronizing Data'
+                                : 'home.sync_card_title'.tr(),
                             style: tt.bodyMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: cs.onSurface,
                             ),
                           ),
                           Text(
-                            'home.sync_card_subtitle'.tr(),
+                            isSyncing
+                                ? 'Connecting local and cloud records...'
+                                : 'home.sync_card_subtitle'.tr(),
                             style: tt.bodySmall?.copyWith(
                               color: cs.onSurfaceVariant,
                               fontSize: 11.sp,
@@ -89,29 +97,51 @@ class SyncAndStatsCard extends StatelessWidget {
                       padding:
                           EdgeInsets.symmetric(horizontal: 8.w, vertical: 4.h),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFD1FAE5),
+                        color: isSyncing
+                            ? cs.primaryContainer.withValues(alpha: 0.7)
+                            : const Color(0xFFD1FAE5),
                         borderRadius: BorderRadius.circular(20.r),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Container(
-                            width: 6.r,
-                            height: 6.r,
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF059669),
-                              shape: BoxShape.circle,
+                          if (isSyncing) ...[
+                            SizedBox(
+                              width: 8.r,
+                              height: 8.r,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 1.5,
+                                color: cs.primary,
+                              ),
                             ),
-                          ),
-                          SizedBox(width: 4.w),
-                          Text(
-                            'home.sync_card_active'.tr(),
-                            style: TextStyle(
-                              fontSize: 11.sp,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF065F46),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'Syncing...',
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: cs.primary,
+                              ),
                             ),
-                          ),
+                          ] else ...[
+                            Container(
+                              width: 6.r,
+                              height: 6.r,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF059669),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            SizedBox(width: 4.w),
+                            Text(
+                              'home.sync_card_active'.tr(),
+                              style: TextStyle(
+                                fontSize: 11.sp,
+                                fontWeight: FontWeight.bold,
+                                color: const Color(0xFF065F46),
+                              ),
+                            ),
+                          ],
                         ],
                       ),
                     ),

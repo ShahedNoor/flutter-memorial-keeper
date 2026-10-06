@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 import '../../../../../imports/core_imports.dart';
 import '../../../domain/entities/memorial.dart';
@@ -37,10 +38,12 @@ class MemorialProfileHeader extends StatelessWidget {
     final tt = context.textTheme;
 
     final hasProfilePhoto = memorial.profilePhotoPath != null &&
-        File(memorial.profilePhotoPath!).existsSync();
+        (memorial.profilePhotoPath!.startsWith('http') ||
+            File(memorial.profilePhotoPath!).existsSync());
 
     final hasGravePhoto = memorial.gravePhotoPath != null &&
-        File(memorial.gravePhotoPath!).existsSync();
+        (memorial.gravePhotoPath!.startsWith('http') ||
+            File(memorial.gravePhotoPath!).existsSync());
 
     return Column(
       children: [
@@ -74,10 +77,16 @@ class MemorialProfileHeader extends StatelessWidget {
                       fit: StackFit.expand,
                       children: [
                         if (hasGravePhoto)
-                          Image.file(
-                            File(memorial.gravePhotoPath!),
-                            fit: BoxFit.cover,
-                          )
+                          if (memorial.gravePhotoPath!.startsWith('http'))
+                            CachedNetworkImage(
+                              imageUrl: memorial.gravePhotoPath!,
+                              fit: BoxFit.cover,
+                            )
+                          else
+                            Image.file(
+                              File(memorial.gravePhotoPath!),
+                              fit: BoxFit.cover,
+                            )
                         else
                           DecoratedBox(
                             decoration: const BoxDecoration(
@@ -203,12 +212,19 @@ class MemorialProfileHeader extends StatelessWidget {
                     ),
                     child: ClipOval(
                       child: hasProfilePhoto
-                          ? Image.file(
-                              File(memorial.profilePhotoPath!),
-                              fit: BoxFit.cover,
-                              width: 104.r,
-                              height: 104.r,
-                            )
+                          ? (memorial.profilePhotoPath!.startsWith('http')
+                              ? CachedNetworkImage(
+                                  imageUrl: memorial.profilePhotoPath!,
+                                  fit: BoxFit.cover,
+                                  width: 104.r,
+                                  height: 104.r,
+                                )
+                              : Image.file(
+                                  File(memorial.profilePhotoPath!),
+                                  fit: BoxFit.cover,
+                                  width: 104.r,
+                                  height: 104.r,
+                                ))
                           : ColoredBox(
                               color: cs.primaryContainer,
                               child: Center(

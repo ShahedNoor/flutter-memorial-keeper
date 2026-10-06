@@ -291,25 +291,45 @@ class _MemorialDirectoryScreenState extends State<MemorialDirectoryScreen>
     required ColorScheme cs,
     required TextTheme tt,
   }) {
+    Future<void> onRefresh() async {
+      context.read<MemorialBloc>().add(const SyncMemorialsEvent(isManual: true));
+      await Future<void>.delayed(const Duration(milliseconds: 600));
+    }
+
     if (memorials.isEmpty) {
-      return HomeEmptyState(
-        message: emptyMessage,
-        subtitle: emptySubtitle,
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        color: cs.primary,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: 60.h),
+            HomeEmptyState(
+              message: emptyMessage,
+              subtitle: emptySubtitle,
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.builder(
-      padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 80.h),
-      itemCount: memorials.length,
-      itemBuilder: (context, index) {
-        final memorial = memorials[index];
-        return MemorialCard(
-          memorial: memorial,
-          onTap: () {
-            context.push(AppRoutes.memorialDetail, extra: memorial);
-          },
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      color: cs.primary,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: EdgeInsets.fromLTRB(20.w, 8.h, 20.w, 80.h),
+        itemCount: memorials.length,
+        itemBuilder: (context, index) {
+          final memorial = memorials[index];
+          return MemorialCard(
+            memorial: memorial,
+            onTap: () {
+              context.push(AppRoutes.memorialDetail, extra: memorial);
+            },
+          );
+        },
+      ),
     );
   }
 }

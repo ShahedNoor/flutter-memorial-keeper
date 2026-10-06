@@ -48,6 +48,11 @@ final class SessionUserChanged extends SessionEvent {
   final AppUser? user;
 }
 
+final class SessionUserUpdated extends SessionEvent {
+  const SessionUserUpdated(this.user);
+  final AppUser user;
+}
+
 final class SessionLogoutRequested extends SessionEvent {
   const SessionLogoutRequested();
 }
@@ -59,8 +64,16 @@ class SessionBloc extends Bloc<SessionEvent, SessionState>
         super(const SessionUnknown()) {
     on<SessionCheckRequested>(_onCheckRequested);
     on<SessionUserChanged>(_onUserChanged);
+    on<SessionUserUpdated>(_onUserUpdated);
     on<SessionLogoutRequested>(_onLogoutRequested);
     add(const SessionCheckRequested());
+  }
+
+  void _onUserUpdated(
+    SessionUserUpdated event,
+    Emitter<SessionState> emit,
+  ) {
+    emit(SessionAuthenticated(event.user));
   }
 
   final AuthRepository _repository;

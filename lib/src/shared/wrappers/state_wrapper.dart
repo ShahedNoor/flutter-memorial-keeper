@@ -1,6 +1,7 @@
 import '../../imports/imports.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
 import '../../features/auth/presentation/providers/session_bloc.dart';
+import '../../features/auth/presentation/providers/auth_bloc.dart';
 
 
 import '../../features/memorials/data/repositories/memorial_repository_impl.dart';
@@ -9,6 +10,7 @@ import '../../features/memorials/domain/usecases/add_memorial_usecase.dart';
 import '../../features/memorials/domain/usecases/update_memorial_usecase.dart';
 import '../../features/memorials/domain/usecases/delete_memorial_usecase.dart';
 import '../../features/memorials/domain/usecases/toggle_favorite_usecase.dart';
+import '../../features/memorials/domain/usecases/sync_memorials_usecase.dart';
 import '../../features/memorials/presentation/providers/memorial_bloc.dart';
 
 import '../../features/dua/data/repositories/dua_repository_impl.dart';
@@ -26,13 +28,16 @@ class StateWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authRepo = AuthRepositoryImpl();
     final memorialRepo = MemorialRepositoryImpl();
     final duaRepo = DuaRepositoryImpl();
 
     return MultiBlocProvider(
       providers: [
         BlocProvider<SessionBloc>(
-            create: (_) => SessionBloc(repository: AuthRepositoryImpl())),
+            create: (_) => SessionBloc(repository: authRepo)),
+        BlocProvider<AuthBloc>(
+            create: (_) => AuthBloc(repository: authRepo)),
         BlocProvider<MemorialBloc>(
           create: (_) => MemorialBloc(
             getMemorialsUseCase: GetMemorialsUseCase(memorialRepo),
@@ -40,6 +45,7 @@ class StateWrapper extends StatelessWidget {
             updateMemorialUseCase: UpdateMemorialUseCase(memorialRepo),
             deleteMemorialUseCase: DeleteMemorialUseCase(memorialRepo),
             toggleFavoriteUseCase: ToggleFavoriteUseCase(memorialRepo),
+            syncMemorialsUseCase: SyncMemorialsUseCase(memorialRepo),
           )..add(const LoadMemorials()),
         ),
         BlocProvider<DuaCubit>(
