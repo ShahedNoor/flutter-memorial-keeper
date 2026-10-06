@@ -52,6 +52,18 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Set up .env file
+        env:
+          ENV_CONTENT: ${{ secrets.ENV_FILE }}
+        run: |
+          if [ -n "$ENV_CONTENT" ]; then
+            echo "$ENV_CONTENT" > .env
+          elif [ -f .env.example ]; then
+            cp .env.example .env
+          else
+            touch .env
+          fi
+
       - name: Build Android Release APK
         run: flutter build apk --release
 
