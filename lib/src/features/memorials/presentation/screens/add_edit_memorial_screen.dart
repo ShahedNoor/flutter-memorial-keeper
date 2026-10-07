@@ -210,15 +210,27 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
     if (action == 'camera' || action == 'gallery') {
       final source =
           action == 'camera' ? ImageSource.camera : ImageSource.gallery;
-      final picked = await picker.pickImage(source: source, imageQuality: 85);
-      if (picked != null) {
-        setState(() {
-          if (isGravePhoto) {
-            _gravePhotoPath = picked.path;
-          } else {
-            _profilePhotoPath = picked.path;
-          }
-        });
+      final picked = await picker.pickImage(source: source);
+      if (picked != null && mounted) {
+        final processed = await AppImageCropperScreen.cropAndCompress(
+          context,
+          imageFile: File(picked.path),
+          isCircle: !isGravePhoto,
+          title: isGravePhoto
+              ? 'Frame Resting Place Photo'
+              : 'Crop Profile Photo',
+          aspectRatio: !isGravePhoto ? 1 : null,
+        );
+
+        if (processed != null && mounted) {
+          setState(() {
+            if (isGravePhoto) {
+              _gravePhotoPath = processed.path;
+            } else {
+              _profilePhotoPath = processed.path;
+            }
+          });
+        }
       }
     }
   }
@@ -239,10 +251,15 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
       if (finalProfilePhotoPath != null &&
           !finalProfilePhotoPath.startsWith('http') &&
           File(finalProfilePhotoPath).existsSync()) {
+        final compressedProfile =
+            await ImageCompressionService.instance.compressImage(
+          File(finalProfilePhotoPath),
+          quality: 85,
+        );
         final res = await R2StorageService.instance.uploadMemorialPhoto(
           userId: userId,
           memorialId: id,
-          file: File(finalProfilePhotoPath),
+          file: compressedProfile,
           isGrave: false,
         );
         res.fold(
@@ -279,10 +296,15 @@ class _AddEditMemorialScreenState extends State<AddEditMemorialScreen> {
       if (finalGravePhotoPath != null &&
           !finalGravePhotoPath.startsWith('http') &&
           File(finalGravePhotoPath).existsSync()) {
+        final compressedGrave =
+            await ImageCompressionService.instance.compressImage(
+          File(finalGravePhotoPath),
+          quality: 85,
+        );
         final res = await R2StorageService.instance.uploadMemorialPhoto(
           userId: userId,
           memorialId: id,
-          file: File(finalGravePhotoPath),
+          file: compressedGrave,
           isGrave: true,
         );
         res.fold(

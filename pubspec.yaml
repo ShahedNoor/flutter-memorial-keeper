@@ -62,7 +62,8 @@ dependencies:
 
   # Media
   image_picker: ^1.2.1
-
+  flutter_image_compress: ^2.5.1
+  image_cropper: ^12.2.1
   # Utilities
   path_provider: ^2.1.4
   url_launcher: ^6.3.1
@@ -88,6 +89,11 @@ dependencies:
 
   # Encryption & Crypto
   crypto: ^3.0.6
+
+  # Data Export & Import
+  csv: ^8.0.0
+  file_picker: ^11.0.3
+  excel_plus: ^2.27.1
 
 dev_dependencies:
   flutter_test:
