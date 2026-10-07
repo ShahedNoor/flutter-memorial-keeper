@@ -4,6 +4,7 @@ import 'package:memorialkeeper/src/imports/packages_imports.dart';
 import 'package:memorialkeeper/src/features/auth/presentation/providers/session_bloc.dart';
 import 'package:memorialkeeper/src/features/auth/presentation/widgets/auth_bottom_sheet.dart';
 import 'package:memorialkeeper/src/features/memorials/presentation/providers/memorial_bloc.dart';
+import '../../../settings/presentation/widgets/export_format_sheet.dart';
 
 /// Modal bottom sheet for app settings, data export, and optional cloud backup.
 class SettingsBackupSheet extends StatelessWidget {
@@ -238,8 +239,43 @@ class SettingsBackupSheet extends StatelessWidget {
                   ),
                   onTap: () {
                     Navigator.pop(context);
+                    ExportFormatSheet.show(context);
+                  },
+                ),
+                const Divider(),
+                ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  leading: AppIcon(
+                    icon: HugeIcons.strokeRoundedCloudDownload,
+                    color: cs.primary,
+                  ),
+                  title:
+                      Text('settings.restore_title'.tr(), style: tt.bodyMedium),
+                  subtitle:
+                      Text('settings.restore_desc'.tr(), style: tt.bodySmall),
+                  trailing: AppIcon(
+                    icon: HugeIcons.strokeRoundedArrowRight01,
+                    size: 18.sp,
+                  ),
+                  onTap: () async {
+                    Navigator.pop(context);
+                    final result =
+                        await BackupRestoreService.instance.pickAndRestoreFile();
+                    if (result == null) return;
+                    if (!context.mounted) return;
+                    if (result.errorMessage != null) {
+                      showGlobalToast(
+                        message: result.errorMessage!,
+                        status: 'error',
+                      );
+                      return;
+                    }
+                    context
+                        .read<MemorialBloc>()
+                        .add(const LoadMemorials());
                     showGlobalToast(
-                      message: 'Local backup generated successfully.',
+                      message:
+                          'Restored: ${result.importedCount} new, ${result.updatedCount} updated.',
                       status: 'success',
                     );
                   },

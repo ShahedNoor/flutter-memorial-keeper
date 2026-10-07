@@ -72,16 +72,20 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
   Future<void> _pickImage(ImageSource source) async {
     try {
       final picker = ImagePicker();
-      final picked = await picker.pickImage(
-        source: source,
-        maxWidth: 600,
-        maxHeight: 600,
-        imageQuality: 85,
-      );
-      if (picked != null) {
-        setState(() {
-          _pickedImage = File(picked.path);
-        });
+      final picked = await picker.pickImage(source: source);
+      if (picked != null && mounted) {
+        final processed = await AppImageCropperScreen.cropAndCompress(
+          context,
+          imageFile: File(picked.path),
+          isCircle: true,
+          title: 'Crop Profile Avatar',
+          aspectRatio: 1,
+        );
+        if (processed != null && mounted) {
+          setState(() {
+            _pickedImage = processed;
+          });
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -152,10 +156,14 @@ class _UserProfileSheetState extends State<UserProfileSheet> {
     String? photoUrl = _currentPhotoUrl;
 
     if (_pickedImage != null) {
-      // 1. Upload new image to Cloudflare R2
+      // 1. Ensure compressed then upload new image to Cloudflare R2
+      final compressed = await ImageCompressionService.instance.compressImage(
+        _pickedImage!,
+        quality: 85,
+      );
       final uploadRes = await R2StorageService.instance.uploadUserProfilePhoto(
         userId: widget.user.id,
-        file: _pickedImage!,
+        file: compressed,
       );
 
       final uploadedUrl = uploadRes.fold(

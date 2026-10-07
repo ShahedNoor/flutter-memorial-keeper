@@ -8,6 +8,8 @@ import '../../../dua/presentation/providers/dua_cubit.dart';
 
 import '../../../auth/presentation/widgets/auth_bottom_sheet.dart';
 import '../../../auth/presentation/widgets/user_profile_sheet.dart';
+import '../../../memorials/presentation/providers/memorial_bloc.dart';
+import '../widgets/export_format_sheet.dart';
 
 /// Complete Settings screen for managing backups, theme, language, and account.
 class SettingsScreen extends StatelessWidget {
@@ -177,12 +179,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'settings.export_desc'.tr(),
             cs: cs,
             tt: tt,
-            onTap: () {
-              showGlobalToast(
-                message: 'Backup exported to device storage successfully.',
-                status: 'success',
-              );
-            },
+            onTap: () => ExportFormatSheet.show(context),
           ),
           _buildSettingsTile(
             icon: HugeIcons.strokeRoundedCloudDownload,
@@ -190,12 +187,7 @@ class SettingsScreen extends StatelessWidget {
             subtitle: 'settings.restore_desc'.tr(),
             cs: cs,
             tt: tt,
-            onTap: () {
-              showGlobalToast(
-                message: 'Restore feature ready.',
-                status: 'info',
-              );
-            },
+            onTap: () => _handleRestore(context),
           ),
           SizedBox(height: 16.h),
 
@@ -484,6 +476,127 @@ class SettingsScreen extends StatelessWidget {
         color: Colors.white,
         size: 24.sp,
       ),
+    );
+  }
+
+  Future<void> _handleRestore(BuildContext context) async {
+    final cs = context.theme.colorScheme;
+    final tt = context.theme.textTheme;
+
+    showGlobalToast(
+      message: 'Opening file picker...',
+      status: 'info',
+    );
+
+    final result = await BackupRestoreService.instance.pickAndRestoreFile();
+    if (result == null) return; // user cancelled
+
+    if (!context.mounted) return;
+
+    if (result.errorMessage != null) {
+      showGlobalToast(
+        message: result.errorMessage!,
+        status: 'error',
+      );
+      return;
+    }
+
+    // Refresh MemorialBloc so list, search, and directory immediately update
+    context.read<MemorialBloc>().add(const LoadMemorials());
+
+    showGlobalToast(
+      message:
+          'Restored: ${result.importedCount} new, ${result.updatedCount} updated.',
+      status: 'success',
+    );
+
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20.r),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(6.r),
+              decoration: BoxDecoration(
+                color: cs.primaryContainer,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.check_circle_outline,
+                color: cs.primary,
+                size: 22.sp,
+              ),
+            ),
+            SizedBox(width: 10.w),
+            Text(
+              'Restore Completed',
+              style: tt.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Successfully restored database from file:',
+              style: tt.bodyMedium,
+            ),
+            SizedBox(height: 12.h),
+            Container(
+              padding: EdgeInsets.all(12.r),
+              decoration: BoxDecoration(
+                color: cs.surfaceContainerLow,
+                borderRadius: BorderRadius.circular(12.r),
+                border: Border.all(color: cs.outlineVariant),
+              ),
+              child: Column(
+                children: [
+                  _buildResultRow('New Records Added', '${result.importedCount}', cs.primary, tt),
+                  Divider(height: 14.h),
+                  _buildResultRow('Existing Updated', '${result.updatedCount}', cs.onSurface, tt),
+                  if (result.failedCount > 0) ...[
+                    Divider(height: 14.h),
+                    _buildResultRow('Failed / Skipped', '${result.failedCount}', cs.error, tt),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: FilledButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.r),
+              ),
+            ),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildResultRow(String label, String value, Color valueColor, TextTheme tt) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: tt.bodySmall),
+        Text(
+          value,
+          style: tt.bodySmall?.copyWith(
+            fontWeight: FontWeight.bold,
+            color: valueColor,
+          ),
+        ),
+      ],
     );
   }
 }
