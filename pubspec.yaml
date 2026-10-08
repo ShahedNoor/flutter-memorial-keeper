@@ -92,7 +92,7 @@ dependencies:
 
   # Data Export & Import
   csv: ^8.0.0
-  file_picker: ^11.0.3
+  file_picker: ^10.3.10
   excel_plus: ^2.27.1
 
 dev_dependencies:

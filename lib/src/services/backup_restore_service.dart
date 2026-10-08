@@ -237,7 +237,7 @@ class BackupRestoreService {
   /// `.xlsx`, or `.json` file, parses the records, and inserts/updates them in SQLite.
   Future<ImportResult?> pickAndRestoreFile() async {
     try {
-      final pickResult = await fp.FilePicker.pickFiles(
+      final pickResult = await fp.FilePicker.platform.pickFiles(
         type: fp.FileType.custom,
         allowedExtensions: ['csv', 'xlsx', 'json'],
       );
